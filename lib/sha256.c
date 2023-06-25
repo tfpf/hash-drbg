@@ -10,13 +10,15 @@
 #define ROTR32(x, n) ((x) >> (n) | (x) << (32 - (n)))
 
 // Hash initialiser.
-static uint32_t const sha256_init[8] =
+static uint32_t const
+sha256_init[8] =
 {
     0x6A09E667U, 0xBB67AE85U, 0x3C6EF372U, 0xA54FF53AU, 0x510E527FU, 0x9B05688CU, 0x1F83D9ABU, 0x5BE0CD19U,
 };
 
 // Round constants.
-static uint32_t const sha256_rc[64] =
+static uint32_t const
+sha256_rc[64] =
 {
     0x428A2F98U, 0x71374491U, 0xB5C0FBCFU, 0xE9B5DBA5U, 0x3956C25BU, 0x59F111F1U, 0x923F82A4U, 0xAB1C5ED5U,
     0xD807AA98U, 0x12835B01U, 0x243185BEU, 0x550C7DC3U, 0x72BE5D74U, 0x80DEB1FEU, 0x9BDC06A7U, 0xC19BF174U,
@@ -29,19 +31,21 @@ static uint32_t const sha256_rc[64] =
 };
 
 // Hash output.
-static uint8_t sha256_bytes[32];
+static uint8_t
+sha256_bytes[32];
 
 /******************************************************************************
  * Display the given data in hexadecimal form.
  *
- * @param message Array of numbers representing the big-endian data to display.
+ * @param bytes Array of numbers representing the big-endian data to display.
  * @param length Numer of elements in the array.
  *****************************************************************************/
-static void dump(uint8_t const *message, size_t length)
+static void
+dump(uint8_t const *bytes, size_t length)
 {
     for(size_t i = 0; i < length; ++i)
     {
-        fprintf(stderr, "%02"PRIX8, message[i]);
+        fprintf(stderr, "%02"PRIX8, bytes[i]);
     }
     fprintf(stderr, "\n");
 }
@@ -57,7 +61,8 @@ static void dump(uint8_t const *message, size_t length)
  *
  * @return Array of numbers representing the big-endian hash of the data.
  *****************************************************************************/
-uint8_t *sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
+uint8_t *
+sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 {
     // Initialise the hash.
     uint32_t h_words[8];
@@ -68,7 +73,7 @@ uint8_t *sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     size_t bits = m_length_ << 3;
     size_t zeros = 512 - ((bits + 65) & 511U);
     size_t m_length = m_length_ + ((1 + zeros) >> 3) + 8;
-    uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
+    uint8_t *m_bytes = calloc(m_length, sizeof *m_bytes);
     memcpy(m_bytes, m_bytes_, m_length_ * sizeof *m_bytes_);
     m_bytes[m_length_] = 0x80U;
     for(int i = 1; i <= 8; ++i)
