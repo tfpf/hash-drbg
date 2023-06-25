@@ -49,15 +49,15 @@ static void dump(uint8_t const *message, size_t length)
 /******************************************************************************
  * Calculate the hash of the given data.
  *
- * @param message_ Array of numbers representing the big-endian data to hash.
- * @param length_ Numer of elements in the array.
+ * @param m_bytes_ Array of numbers representing the big-endian data to hash.
+ * @param m_length_ Numer of elements in the array.
  * @param h_bytes Array to store the big-endian hash in. (It must have enough
  *     space to store 32 elements.) If `NULL`, the hash will be stored in a
  *     static array.
  *
  * @return Array of numbers representing the big-endian hash of the data.
  *****************************************************************************/
-uint8_t *sha256(uint8_t const *message_, size_t length_, uint8_t *h_bytes)
+uint8_t *sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 {
     // Initialise the hash.
     uint32_t h_words[8];
@@ -65,21 +65,21 @@ uint8_t *sha256(uint8_t const *message_, size_t length_, uint8_t *h_bytes)
 
     // Create a padded copy whose width in bits is a multiple of 512. Note that
     // the amount of zero-padding required is odd, hence a non-zero number.
-    size_t bits = length_ << 3;
+    size_t bits = m_length_ << 3;
     size_t zeros = 512 - ((bits + 65) & 511U);
-    size_t length = length_ + ((1 + zeros) >> 3) + 8;
-    uint8_t *message = malloc(length * sizeof *message);
-    memcpy(message, message_, length_ * sizeof *message_);
-    message[length_] = 0x80U;
+    size_t m_length = m_length_ + ((1 + zeros) >> 3) + 8;
+    uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
+    memcpy(m_bytes, m_bytes_, m_length_ * sizeof *m_bytes_);
+    m_bytes[m_length_] = 0x80U;
     for(int i = 1; i <= 8; ++i)
     {
-        message[length - i] = bits;
+        m_bytes[m_length - i] = bits;
         bits >>= 8;
     }
 
     // Process each 512-bit chunk.
-    uint8_t *m_iter = message;
-    for(size_t i = 0; i < length; i += 64)
+    uint8_t *m_iter = m_bytes;
+    for(size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.
         uint32_t schedule[64] = {0};
@@ -123,17 +123,18 @@ uint8_t *sha256(uint8_t const *message_, size_t length_, uint8_t *h_bytes)
             h_words[j] += curr[j];
         }
     }
-    free(message);
+    free(m_bytes);
 
     // Copy the hash to the output array.
     h_bytes = h_bytes == NULL ? sha256_bytes : h_bytes;
-    uint8_t *h_iter = h_bytes;
-    for(int i = 0; i < 8; ++i)
+    uint8_t *h_iter = h_bytes + 31;
+    for(int i = 7; i >= 0; --i)
     {
-        *h_iter++ = h_words[i] >> 24;
-        *h_iter++ = h_words[i] >> 16;
-        *h_iter++ = h_words[i] >> 8;
-        *h_iter++ = h_words[i];
+        for(int j = 0; j < 4; ++j)
+        {
+            *h_iter-- = h_words[i];
+            h_words[i] >>= 8;
+        }
     }
     dump(h_bytes, 32);
     return h_bytes;
