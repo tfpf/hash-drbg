@@ -1,9 +1,9 @@
 #include <inttypes.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "misc.h"
 #include "sha.h"
 
 #define ROTL32(x, n) ((x) << (n) | (x) >> (32 - (n)))
@@ -33,22 +33,6 @@ sha256_rc[64] =
 // Hash output.
 static uint8_t
 sha256_bytes[32];
-
-/******************************************************************************
- * Display the given data in hexadecimal form.
- *
- * @param bytes Array of numbers representing the big-endian data to display.
- * @param length Numer of elements in the array.
- *****************************************************************************/
-static void
-dump(uint8_t const *bytes, size_t length)
-{
-    for(size_t i = 0; i < length; ++i)
-    {
-        fprintf(stderr, "%02"PRIX8, bytes[i]);
-    }
-    fprintf(stderr, "\n");
-}
 
 /******************************************************************************
  * Calculate the hash of the given data.
@@ -141,6 +125,5 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
             h_words[i] >>= 8;
         }
     }
-    dump(h_bytes, 32);
     return h_bytes;
 }
