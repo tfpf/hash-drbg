@@ -68,10 +68,11 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 
     // Process each 512-bit chunk.
     uint8_t *m_iter = m_bytes;
+    uint32_t schedule[64] = {0};
+    uint32_t curr[8];
     for(size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.
-        uint32_t schedule[64] = {0};
         for(int j = 0; j < 16; ++j)
         {
             for(int k = 0; k < 4; ++k)
@@ -87,7 +88,6 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
         }
 
         // Compress to 256 bits.
-        uint32_t curr[8];
         memcpy(curr, h_words, sizeof curr);
         for(int j = 0; j < 64; ++j)
         {
@@ -112,7 +112,6 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
             h_words[j] += curr[j];
         }
     }
-    memclear(m_bytes, m_length * sizeof *m_bytes);
     free(m_bytes);
 
     // Copy the hash to the output array.
@@ -126,6 +125,5 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
             h_words[i] >>= 8;
         }
     }
-    memclear(h_words, sizeof h_words);
     return h_bytes;
 }
