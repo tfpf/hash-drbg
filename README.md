@@ -4,3 +4,5 @@
   Technology, Gaithersburg, MD, USA), NIST SP 800-57 Part 1, Rev. 5.
 * National Institute of Standards and Technology (2015) Secure Hash Standard. (National Institute of Standards and
   Technology, Gaithersburg, MD, USA), FIPS PUB 180-4.
+
+# Work in progress! Some or all commits may be squashed.
