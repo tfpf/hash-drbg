@@ -8,10 +8,14 @@
 #include "hdrbg.h"
 #include "sha.h"
 
+// All numbers are in bytes.
+#define HDRBG_SECURITY_STRENGTH 32
+#define HDRBG_SEED_LENGTH 55
+
 struct hdrbg_t
 {
-    uint8_t V[56];
-    uint8_t C[56];
+    uint8_t V[HDRBG_SEED_LENGTH + 1];
+    uint8_t C[HDRBG_SEED_LENGTH + 1];
     uint64_t gen_count;
     uint64_t seed_count;
 };
@@ -37,21 +41,33 @@ hdrbg_init(struct hdrbg_t *hd)
     }
     ++hd->seed_count;
 
-    uint8_t seed_material[44];
-    uint8_t *s_iter = seed_material;
-
-    // Obtain 32 bytes of entropy.
+    // Obtain some entropy and a nonce. Construct the nonce using the timestamp
+    // and a sequence number.
+    uint8_t seeder[HDRBG_SECURITY_STRENGTH + 4 + 8];
+    uint8_t *s_iter = seeder;
     FILE *rd = fopen("/dev/urandom", "rb");
-    fread(s_iter, sizeof *s_iter, 32, rd);
+    s_iter += fread(s_iter, sizeof *s_iter, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
-    s_iter += 32;
-
-    // Obtain a 4-byte timestamp.
-    uint32_t now = time(NULL);
-    s_iter += memdecompose(s_iter, 4, now);
-
-    // Obtain an 8-byte sequence number.
+    s_iter += memdecompose(s_iter, 4, (uint32_t)time(NULL));
     s_iter += memdecompose(s_iter, 8, hd->seed_count);
-    memdump(seed_material, sizeof seed_material / sizeof *seed_material);
+    memdump(seeder, sizeof seeder / sizeof *seeder);
+
+    // Obtain the seed.
+    hash_df(seeder, sizeof seeder / sizeof *seeder, hd->V + 1, HDRBG_SEED_LENGTH);
     return hd;
+}
+
+/******************************************************************************
+ * Use a hash function to transform the input bytes into the required number of
+ * output bytes.
+ *
+ * @param m_bytes Input bytes.
+ * @param m_length Number of input bytes.
+ * @param h_bytes Array to store the output bytes in. (It must have enough
+ *     space to store the required number of output bytes.)
+ * @param h_length Number of output bytes required.
+ *****************************************************************************/
+void
+hash_df(uint8_t const *m_bytes, size_t m_length, uint8_t *h_bytes, size_t h_length)
+{
 }
