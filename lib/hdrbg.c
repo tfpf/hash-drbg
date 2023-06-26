@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include "extras.h"
@@ -11,6 +12,7 @@
 // All numbers are in bytes.
 #define HDRBG_SECURITY_STRENGTH 32
 #define HDRBG_SEED_LENGTH 55
+#define HDRBG_OUTPUT_LENGTH 32
 
 struct hdrbg_t
 {
@@ -50,10 +52,13 @@ hdrbg_init(struct hdrbg_t *hd)
     fclose(rd);
     s_iter += memdecompose(s_iter, 4, (uint32_t)time(NULL));
     s_iter += memdecompose(s_iter, 8, hd->seed_count);
-    memdump(seeder, sizeof seeder / sizeof *seeder);
 
-    // Obtain the seed.
+    // Obtain the seed and constant.
     hash_df(seeder, sizeof seeder / sizeof *seeder, hd->V + 1, HDRBG_SEED_LENGTH);
+    hd->V[0] = 0x00U;
+    hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C + 1, HDRBG_SEED_LENGTH);
+memdump(hd->V, HDRBG_SEED_LENGTH + 1);
+memdump(hd->C, HDRBG_SEED_LENGTH + 1);
     return hd;
 }
 
@@ -61,13 +66,34 @@ hdrbg_init(struct hdrbg_t *hd)
  * Use a hash function to transform the input bytes into the required number of
  * output bytes.
  *
- * @param m_bytes Input bytes.
- * @param m_length Number of input bytes.
+ * @param m_bytes_ Input bytes.
+ * @param m_length_ Number of input bytes.
  * @param h_bytes Array to store the output bytes in. (It must have enough
  *     space to store the required number of output bytes.)
  * @param h_length Number of output bytes required.
  *****************************************************************************/
 void
-hash_df(uint8_t const *m_bytes, size_t m_length, uint8_t *h_bytes, size_t h_length)
+hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_length)
 {
+memdump(m_bytes_, m_length_);
+    // Construct (a part of) the data to be hashed.
+    size_t m_length = 5 + m_length_;
+    uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
+    uint32_t bits = (uint32_t)h_length << 3;
+    memdecompose(m_bytes + 1, 4, bits);
+    memcpy(m_bytes + 5, m_bytes_, m_length_ * sizeof *m_bytes_);
+
+    // Hash repeatedly.
+    size_t iterations = (h_length - 1) / HDRBG_OUTPUT_LENGTH + 1;
+    uint8_t tmp[HDRBG_OUTPUT_LENGTH];
+    for(size_t i = 1; i <= iterations; ++i)
+    {
+        m_bytes[0] = i;
+memdump(m_bytes, m_length);
+        sha256(m_bytes, m_length, tmp);
+        size_t length = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
+        memcpy(h_bytes, tmp, length * sizeof *h_bytes);
+        h_length -= length;
+        h_bytes += length;
+    }
 }
