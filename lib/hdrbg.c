@@ -13,11 +13,12 @@ struct hdrbg_t
     uint8_t V[56];
     uint8_t C[56];
     uint64_t gen_count;
-    uint64_t seq_num;
+    uint64_t seed_count;
 };
 
 /******************************************************************************
  * Create and/or initialise an HDRBG object with 256-bit security strength.
+ * Prediction resistance is not supported. No personalisation string is used.
  *
  * @param hd HDRBG object to initialise. If `NULL`, a new HDRBG object will be
  *     created and initialised.
@@ -32,9 +33,9 @@ hdrbg_init(struct hdrbg_t *hd)
     {
         hd = malloc(sizeof *hd);
         hd->gen_count = 0;
-        hd->seq_num = 0;
+        hd->seed_count = 0;
     }
-    ++hd->seq_num;
+    ++hd->seed_count;
 
     uint8_t seed_material[44];
     uint8_t *s_iter = seed_material;
@@ -47,19 +48,10 @@ hdrbg_init(struct hdrbg_t *hd)
 
     // Obtain a 4-byte timestamp.
     uint32_t now = time(NULL);
-    for(int i = 0; i < 4; ++i)
-    {
-        *s_iter++ = now;
-        now >>= 8;
-    }
+    s_iter += memdecompose(s_iter, 4, now);
 
     // Obtain an 8-byte sequence number.
-    uint64_t seq_num = hd->seq_num;
-    for(int i = 0; i < 8; ++i)
-    {
-        *s_iter++ = seq_num;
-        seq_num >>= 8;
-    }
+    s_iter += memdecompose(s_iter, 8, hd->seed_count);
     memdump(seed_material, sizeof seed_material / sizeof *seed_material);
     return hd;
 }

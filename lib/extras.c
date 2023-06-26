@@ -44,7 +44,7 @@ uint64_t
 memcompose(uint8_t const *addr, size_t length)
 {
     uint64_t value = 0;
-    while(length-- > 0)
+    for(size_t i = 0; i < length; ++i)
     {
         value = value << 8 | *addr++;
     }
@@ -58,14 +58,17 @@ memcompose(uint8_t const *addr, size_t length)
  *     written in big-endian order.
  * @param length Number of bytes to process. At most 8.
  * @param value Number to be decomposed.
+ *
+ * @return Number of bytes processed (`length`).
  *****************************************************************************/
-void
+size_t
 memdecompose(uint8_t *addr, size_t length, uint64_t value)
 {
     addr += length - 1;
-    while(length-- > 0)
+    for(size_t i = 0; i < length; ++i)
     {
         *addr-- = value;
         value >>= 8;
     }
+    return length;
 }

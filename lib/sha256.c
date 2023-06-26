@@ -68,9 +68,10 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     for(size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.
-        for(int j = 0; j < 16; ++j, m_iter += 4)
+        for(int j = 0; j < 16; ++j)
         {
             schedule[j] = memcompose(m_iter, 4);
+            m_iter += 4;
         }
         for(int j = 16; j < 64; ++j)
         {
@@ -110,9 +111,9 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     // Copy the hash to the output array.
     h_bytes = h_bytes == NULL ? sha256_bytes : h_bytes;
     uint8_t *h_iter = h_bytes;
-    for(int i = 0; i < 8; ++i, h_iter += 4)
+    for(int i = 0; i < 8; ++i)
     {
-        memdecompose(h_iter, 4, h_words[i]);
+        h_iter += memdecompose(h_iter, 4, h_words[i]);
     }
     return h_bytes;
 }
