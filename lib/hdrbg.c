@@ -36,7 +36,7 @@ hdrbg_init(struct hdrbg_t *hd)
     }
     ++hd->seq_num;
 
-    uint8_t seed_material[52];
+    uint8_t seed_material[44];
     uint8_t *s_iter = seed_material;
 
     // Obtain 32 bytes of entropy.
@@ -60,15 +60,6 @@ hdrbg_init(struct hdrbg_t *hd)
         *s_iter++ = seq_num;
         seq_num >>= 8;
     }
-
-    // Obtain an 8-byte personalisation string. This is a prime number I chose
-    // randomly.
-    uint64_t pstr = 0x3E1FFEA7DA37D6FFU;
-    for(int i = 0; i < 8; ++i)
-    {
-        *s_iter++ = pstr;
-        pstr >>= 8;
-    }
-    memdump(seed_material, 52);
+    memdump(seed_material, sizeof seed_material / sizeof *s_iter);
     return hd;
 }
