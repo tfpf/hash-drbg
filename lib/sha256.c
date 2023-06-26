@@ -53,7 +53,7 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 
     // Create a padded copy whose width in bits is a multiple of 512. Note that
     // the amount of zero-padding required is odd, hence a non-zero number.
-    size_t bits = m_length_ << 3;
+    uint64_t bits = (uint64_t)m_length_ << 3;
     size_t zeros = 512 - ((bits + 65) & 511U);
     size_t m_length = m_length_ + ((1 + zeros) >> 3) + 8;
     uint8_t *m_bytes = calloc(m_length, sizeof *m_bytes);
