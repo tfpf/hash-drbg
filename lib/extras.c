@@ -31,3 +31,41 @@ memclear(void *ptr, size_t size)
 {
     memset(ptr, 0, size);
 }
+
+/******************************************************************************
+ * Compose some bytes into a number.
+ *
+ * @param addr Starting address of the bytes.
+ * @param length Number of bytes to process. At most 8.
+ *
+ * @return Bytes interpreted as a big-endian integer.
+ *****************************************************************************/
+uint64_t
+memcompose(uint8_t const *addr, size_t length)
+{
+    uint64_t value = 0;
+    while(length-- > 0)
+    {
+        value = value << 8 | *addr++;
+    }
+    return value;
+}
+
+/******************************************************************************
+ * Decompose the bytes of a number.
+ *
+ * @param addr Starting address from which the bytes of the number will be
+ *     written in big-endian order.
+ * @param length Number of bytes to process. At most 8.
+ * @param value Number to be decomposed.
+ *****************************************************************************/
+void
+memdecompose(uint8_t *addr, size_t length, uint64_t value)
+{
+    addr += length - 1;
+    while(length-- > 0)
+    {
+        *addr-- = value;
+        value >>= 8;
+    }
+}

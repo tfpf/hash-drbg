@@ -59,25 +59,18 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     uint8_t *m_bytes = calloc(m_length, sizeof *m_bytes);
     memcpy(m_bytes, m_bytes_, m_length_ * sizeof *m_bytes_);
     m_bytes[m_length_] = 0x80U;
-    for(int i = 1; i <= 8; ++i)
-    {
-        m_bytes[m_length - i] = bits;
-        bits >>= 8;
-    }
+    memdecompose(m_bytes + m_length - 8, 8, bits);
 
     // Process each 512-bit chunk.
     uint8_t *m_iter = m_bytes;
-    uint32_t schedule[64] = {0};
+    uint32_t schedule[64];
     uint32_t curr[8];
     for(size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.
-        for(int j = 0; j < 16; ++j)
+        for(int j = 0; j < 16; ++j, m_iter += 4)
         {
-            for(int k = 0; k < 4; ++k)
-            {
-                schedule[j] = schedule[j] << 8 | *m_iter++;
-            }
+            schedule[j] = memcompose(m_iter, 4);
         }
         for(int j = 16; j < 64; ++j)
         {
@@ -116,14 +109,10 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 
     // Copy the hash to the output array.
     h_bytes = h_bytes == NULL ? sha256_bytes : h_bytes;
-    uint8_t *h_iter = h_bytes + 31;
-    for(int i = 7; i >= 0; --i)
+    uint8_t *h_iter = h_bytes;
+    for(int i = 0; i < 8; ++i, h_iter += 4)
     {
-        for(int j = 0; j < 4; ++j)
-        {
-            *h_iter-- = h_words[i];
-            h_words[i] >>= 8;
-        }
+        memdecompose(h_iter, 4, h_words[i]);
     }
     return h_bytes;
 }
