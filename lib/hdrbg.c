@@ -60,6 +60,6 @@ hdrbg_init(struct hdrbg_t *hd)
         *s_iter++ = seq_num;
         seq_num >>= 8;
     }
-    memdump(seed_material, sizeof seed_material / sizeof *s_iter);
+    memdump(seed_material, sizeof seed_material / sizeof *seed_material);
     return hd;
 }
