@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#include "extras.h"
 #include "hdrbg.h"
-#include "misc.h"
 #include "sha.h"
 
 struct hdrbg_t

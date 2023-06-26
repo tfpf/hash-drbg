@@ -3,10 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "misc.h"
+#include "extras.h"
 #include "sha.h"
 
-#define ROTL32(x, n) ((x) << (n) | (x) >> (32 - (n)))
 #define ROTR32(x, n) ((x) >> (n) | (x) << (32 - (n)))
 
 // Hash initialiser.
