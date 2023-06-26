@@ -111,6 +111,7 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
             h_words[j] += curr[j];
         }
     }
+    memclear(m_bytes, m_length * sizeof *m_bytes);
     free(m_bytes);
 
     // Copy the hash to the output array.
