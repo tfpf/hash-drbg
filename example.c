@@ -19,5 +19,8 @@ int main(void)
     memdump(sha256(message, 1000, NULL), 32);
     void *hd = hdrbg_new();
     hdrbg_renew(hd);
+    uint8_t r[1000];
+    hdrbg_gen(hd, false, r, 1000);
+    memdump(r, 1000);
     hdrbg_delete(hd);
 }

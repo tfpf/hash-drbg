@@ -12,9 +12,9 @@
 void
 memdump(uint8_t const *bytes, size_t length)
 {
-    for(size_t i = 0; i < length; ++i)
+    while(length-- > 0)
     {
-        fprintf(stderr, "%02"PRIX8, bytes[i]);
+        fprintf(stderr, "%02"PRIX8, *bytes++);
     }
     fprintf(stderr, "\n");
 }
@@ -44,7 +44,7 @@ uint64_t
 memcompose(uint8_t const *addr, size_t length)
 {
     uint64_t value = 0;
-    for(size_t i = 0; i < length; ++i)
+    while(length-- > 0)
     {
         value = value << 8 | *addr++;
     }
