@@ -121,6 +121,7 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
     // Hash repeatedly.
     size_t iterations = (h_length - 1) / HDRBG_OUTPUT_LENGTH + 1;
     uint8_t tmp[HDRBG_OUTPUT_LENGTH];
+    uint8_t one = 1;
     for(size_t i = 0; i < iterations; ++i)
     {
         sha256(m_bytes, HDRBG_SEED_LENGTH, tmp);
@@ -128,8 +129,7 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
         memcpy(h_bytes, tmp, length * sizeof *h_bytes);
         h_length -= length;
         h_bytes += length;
-        uint8_t b = 1;
-        add_bignums(m_bytes, HDRBG_SEED_LENGTH, &b, 1);
+        add_bignums(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
     }
 }
 
