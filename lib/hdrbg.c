@@ -16,6 +16,7 @@
 #define HDRBG_SECURITY_STRENGTH 32
 #define HDRBG_SEED_LENGTH 55
 #define HDRBG_OUTPUT_LENGTH 32
+#define HDRBG_RESEED_INTERVAL ((uint64_t)1 << 48)
 
 #ifndef __STDC_NO_ATOMICS__
 static _Atomic uint64_t
@@ -128,4 +129,16 @@ hdrbg_renew(struct hdrbg_t *hd)
     fclose(rd);
 
     hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
+}
+
+/******************************************************************************
+ * Clear and destroy an HDRBG object previously created using `hdrbg_new`.
+ *
+ * @param hd HDRBG object.
+ *****************************************************************************/
+void
+hdrbg_delete(struct hdrbg_t *hd)
+{
+    memclear(hd, sizeof *hd);
+    free(hd);
 }
