@@ -17,5 +17,5 @@ int main(void)
         sha256(message, 1000, message);  // 08F94425E2C2CB064A9843285868D6A8207A2C9AEA011386053BF481DD14FFF2
     }
     memdump(sha256(message, 1000, NULL), 32);
-    hdrbg_init(NULL);
+    hdrbg_new();
 }

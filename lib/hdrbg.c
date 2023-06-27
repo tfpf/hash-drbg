@@ -9,62 +9,25 @@
 #include "hdrbg.h"
 #include "sha.h"
 
-// All numbers are in bytes.
 #define HDRBG_SECURITY_STRENGTH 32
 #define HDRBG_SEED_LENGTH 55
 #define HDRBG_OUTPUT_LENGTH 32
 
+static uint64_t
+seq_num = 0;
+
 struct hdrbg_t
 {
+    // The first member is prepended with a byte of zeros whenever it is
+    // processed, so keep an extra byte.
     uint8_t V[HDRBG_SEED_LENGTH + 1];
-    uint8_t C[HDRBG_SEED_LENGTH + 1];
+    uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
-    uint64_t seed_count;
 };
 
 /******************************************************************************
- * Create and/or initialise an HDRBG object with 256-bit security strength.
- * Prediction resistance is not supported. No personalisation string is used.
- *
- * @param hd HDRBG object to initialise. If `NULL`, a new HDRBG object will be
- *     created and initialised.
- *
- * @return Initialised HDRBG object.
- *****************************************************************************/
-struct hdrbg_t *
-hdrbg_init(struct hdrbg_t *hd)
-{
-    // Create if necessary.
-    if(hd == NULL)
-    {
-        hd = malloc(sizeof *hd);
-        hd->gen_count = 0;
-        hd->seed_count = 0;
-    }
-    ++hd->seed_count;
-
-    // Obtain some entropy and a nonce. Construct the nonce using the timestamp
-    // and a sequence number.
-    uint8_t seeder[HDRBG_SECURITY_STRENGTH + 4 + 8];
-    uint8_t *s_iter = seeder;
-    FILE *rd = fopen("/dev/urandom", "rb");
-    s_iter += fread(s_iter, sizeof *s_iter, HDRBG_SECURITY_STRENGTH, rd);
-    fclose(rd);
-    s_iter += memdecompose(s_iter, 4, (uint32_t)time(NULL));
-    s_iter += memdecompose(s_iter, 8, hd->seed_count);
-
-    // Obtain the seed and constant.
-    hash_df(seeder, sizeof seeder / sizeof *seeder, hd->V + 1, HDRBG_SEED_LENGTH);
-    hd->V[0] = 0x00U;
-    hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C + 1, HDRBG_SEED_LENGTH);
-memdump(hd->V, HDRBG_SEED_LENGTH + 1);
-memdump(hd->C, HDRBG_SEED_LENGTH + 1);
-    return hd;
-}
-
-/******************************************************************************
- * Use a hash function to transform the input bytes into the required number of
- * output bytes.
+ * Hash derivation function. Transform the input bytes into the required number
+ * of output bytes using a hash function.
  *
  * @param m_bytes_ Input bytes.
  * @param m_length_ Number of input bytes.
@@ -72,10 +35,9 @@ memdump(hd->C, HDRBG_SEED_LENGTH + 1);
  *     space to store the required number of output bytes.)
  * @param h_length Number of output bytes required.
  *****************************************************************************/
-void
+static void
 hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_length)
 {
-memdump(m_bytes_, m_length_);
     // Construct (a part of) the data to be hashed.
     size_t m_length = 5 + m_length_;
     uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
@@ -89,11 +51,73 @@ memdump(m_bytes_, m_length_);
     for(size_t i = 1; i <= iterations; ++i)
     {
         m_bytes[0] = i;
-memdump(m_bytes, m_length);
         sha256(m_bytes, m_length, tmp);
         size_t length = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, length * sizeof *h_bytes);
         h_length -= length;
         h_bytes += length;
     }
+    memclear(m_bytes, m_length * sizeof *m_bytes);
+    free(m_bytes);
+}
+
+/******************************************************************************
+ * Set the members of an HDRBG object.
+ *
+ * @param hd HDRBG object.
+ * @param seeder Array to derive the values of the members from.
+ * @param length Number of elements in the array.
+ *****************************************************************************/
+static void
+hdrbg_seed(struct hdrbg_t *hd, uint8_t *seeder, size_t length)
+{
+    hd->V[0] = 0x00U;
+    hash_df(seeder, length, hd->V + 1, HDRBG_SEED_LENGTH);
+    hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C, HDRBG_SEED_LENGTH);
+    hd->gen_count = 0;
+}
+
+/******************************************************************************
+ * Create and initialise an HDRBG object with 256-bit security strength.
+ * Prediction resistance is supported. No personalisation string is used.
+ *
+ * @return Initialised HDRBG object.
+ *****************************************************************************/
+struct hdrbg_t *
+hdrbg_new(void)
+{
+    struct hdrbg_t *hd = malloc(sizeof *hd);
+
+    // Obtain some entropy and a nonce. Construct the nonce using the timestamp
+    // and a sequence number.
+    uint8_t seeder[HDRBG_SECURITY_STRENGTH + 12];
+    uint8_t *s_iter = seeder;
+    FILE *rd = fopen("/dev/urandom", "rb");
+    s_iter += fread(s_iter, sizeof *s_iter, HDRBG_SECURITY_STRENGTH, rd);
+    fclose(rd);
+    s_iter += memdecompose(s_iter, 4, (uint32_t)time(NULL));
+    s_iter += memdecompose(s_iter, 8, ++seq_num);
+
+    hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
+    return hd;
+}
+
+/******************************************************************************
+ * Reinitialise an HDRBG object previously created using `hdrbg_new` with
+ * prediction resistance. No additional input is used.
+ *
+ * @param hd HDRBG object.
+ *****************************************************************************/
+void
+hdrbg_renew(struct hdrbg_t *hd)
+{
+    // Obtain some entropy.
+    uint8_t seeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH];
+    seeder[0] = 0x01U;
+    memcpy(seeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *seeder);
+    FILE *rd = fopen("/dev/urandom", "rb");
+    fread(seeder + 1 + HDRBG_SEED_LENGTH, sizeof *seeder, HDRBG_SECURITY_STRENGTH, rd);
+    fclose(rd);
+
+    hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
 }
