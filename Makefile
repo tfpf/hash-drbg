@@ -1,4 +1,4 @@
-CFLAGS = -std=c11 -O2 -Wall -Wextra -I./include -fPIC -fstrict-aliasing
+CFLAGS = -std=c17 -O2 -Wall -Wextra -I./include -fPIC -fstrict-aliasing
 
 Sources = $(wildcard lib/*.c)
 Objects = $(Sources:.c=.o)

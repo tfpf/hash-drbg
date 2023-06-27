@@ -5,6 +5,10 @@
 #include <string.h>
 #include <time.h>
 
+#ifndef __STDC_NO_ATOMICS__
+#include <stdatomic.h>
+#endif
+
 #include "extras.h"
 #include "hdrbg.h"
 #include "sha.h"
@@ -13,7 +17,11 @@
 #define HDRBG_SEED_LENGTH 55
 #define HDRBG_OUTPUT_LENGTH 32
 
+#ifndef __STDC_NO_ATOMICS__
+static _Atomic uint64_t
+#else
 static uint64_t
+#endif
 seq_num = 0;
 
 struct hdrbg_t
