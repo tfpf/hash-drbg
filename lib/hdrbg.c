@@ -37,30 +37,30 @@ struct hdrbg_t
 };
 
 /******************************************************************************
- * Add two numbers.
+ * Add two numbers. Overwrite the first number with the result, disregarding
+ * any carried bytes.
  *
- * @param a Array of bytes of the first number in big-endian order. The sum
- *     will by placed in this array, discarding the carried byte (if any).
+ * @param a_bytes Array of bytes of the first number in big-endian order.
  * @param a_length Number of bytes of the first number.
- * @param b Array of bytes of the second number in big-endian order.
+ * @param b_bytes Array of bytes of the second number in big-endian order.
  * @param b_length Number of bytes of the second number. Must be less than or
  *     equal to the number of bytes of the first number.
  *****************************************************************************/
 static void
-add_bignums(uint8_t *a, size_t a_length, uint8_t *b, size_t b_length)
+add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t b_length)
 {
     int unsigned carry = 0;
     size_t ai = a_length, bi = b_length;
     for(; ai > 0 && bi > 0; --ai, --bi)
     {
-        carry = a[ai - 1] + carry + b[bi - 1];
-        a[ai - 1] = carry;
+        carry = a_bytes[ai - 1] + carry + b_bytes[bi - 1];
+        a_bytes[ai - 1] = carry;
         carry >>= 8;
     }
     for(; ai > 0; --ai)
     {
-        carry += a[ai - 1];
-        a[ai - 1] = carry;
+        carry += a_bytes[ai - 1];
+        a_bytes[ai - 1] = carry;
         carry >>= 8;
     }
 }
@@ -129,7 +129,7 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
         memcpy(h_bytes, tmp, length * sizeof *h_bytes);
         h_length -= length;
         h_bytes += length;
-        add_bignums(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
+        add_accumulate(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
     }
 }
 
@@ -226,9 +226,9 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
     sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp);
     uint8_t gen_count[8];
     memdecompose(gen_count, 8, hd->gen_count);
-    add_bignums(hd->V + 1, HDRBG_SEED_LENGTH, tmp, HDRBG_OUTPUT_LENGTH);
-    add_bignums(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
-    add_bignums(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
+    add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, tmp, HDRBG_OUTPUT_LENGTH);
+    add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
+    add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
     ++hd->gen_count;
     return true;
 }

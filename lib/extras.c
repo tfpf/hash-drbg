@@ -21,7 +21,7 @@ memdump(uint8_t const *bytes, size_t length)
 
 /******************************************************************************
  * Clear memory. Since this file is compiled separately, this function
- * shouldn't be optimised out.
+ * shouldn't be optimised out when called just before freeing the memory.
  *
  * @param ptr
  * @param size
@@ -64,10 +64,9 @@ memcompose(uint8_t const *addr, size_t length)
 size_t
 memdecompose(uint8_t *addr, size_t length, uint64_t value)
 {
-    addr += length - 1;
     for(size_t i = 0; i < length; ++i)
     {
-        *addr-- = value;
+        addr[length - 1 - i] = value;
         value >>= 8;
     }
     return length;
