@@ -295,6 +295,8 @@ hdrbg_test(void)
     // Without prediction resistance.
     if(fscanf(tv, "%zu", &count) != 1)
     {
+        fclose(tv);
+        free(hd);
         return;
     }
     while(count-- > 0)
