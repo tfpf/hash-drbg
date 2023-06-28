@@ -34,6 +34,9 @@ static uint64_t
 #endif
 seq_num = 0;
 
+// To suppress warnings about unused return values when I know what I am doing.
+static int _;
+
 struct hdrbg_t
 {
     // The first member is prepended with a byte whenever it is processed, so
@@ -294,12 +297,7 @@ hdrbg_test(void)
     uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
 
     // Without prediction resistance.
-    if(fscanf(tv, "%zu", &count) != 1)
-    {
-        fclose(tv);
-        free(hd);
-        return;
-    }
+    _ = fscanf(tv, "%zu", &count);
     for(size_t i = 0; i < count; ++i)
     {
         printf("Running test %zu/%zu without prediction resistance.\r", i + 1, count);
@@ -318,12 +316,7 @@ hdrbg_test(void)
     // With prediction resistance. Generating with prediction resistance is the
     // same as reinitialising and generating without prediction resistance, so
     // the code is similar.
-    if(fscanf(tv, "%zu", &count) != 1)
-    {
-        fclose(tv);
-        free(hd);
-        return;
-    }
+    _ = fscanf(tv, "%zu", &count);
     for(size_t i = 0; i < count; ++i)
     {
         printf("Running test %zu/%zu with prediction resistance.\r", i + 1, count);
