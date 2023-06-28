@@ -289,7 +289,7 @@ hdrbg_test(void)
 
     size_t count;
     uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
-    uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH];
+    uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
     uint8_t expected[HDRBG_TV_REQUEST_LENGTH];
     uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
 
@@ -300,19 +300,47 @@ hdrbg_test(void)
         free(hd);
         return;
     }
-    while(count-- > 0)
+    for(size_t i = 0; i < count; ++i)
     {
+        printf("Running test %zu/%zu without prediction resistance.\r", i + 1, count);
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
-        reseeder[0] = 0x01U;
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
         streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
         hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
         streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
-        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
-        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
         assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
     }
+    printf("\n");
+
+    // With prediction resistance. Generating with prediction resistance is the
+    // same as reinitialising and generating without prediction resistance, so
+    // the code is similar.
+    if(fscanf(tv, "%zu", &count) != 1)
+    {
+        fclose(tv);
+        free(hd);
+        return;
+    }
+    for(size_t i = 0; i < count; ++i)
+    {
+        printf("Running test %zu/%zu with prediction resistance.\r", i + 1, count);
+        streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
+        hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
+        memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
+        streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
+        hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
+        streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
+        hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
+        assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
+    }
+    printf("\n");
 
     fclose(tv);
     free(hd);
