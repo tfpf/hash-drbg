@@ -190,10 +190,12 @@ hdrbg_renew(struct hdrbg_t *hd)
 {
     // Obtain some entropy.
     uint8_t seeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH];
-    seeder[0] = 0x01U;
-    memcpy(seeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *seeder);
+    uint8_t *s_iter = seeder;
+    *s_iter++ = 0x01U;
+    memcpy(s_iter, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *seeder);
+    s_iter += HDRBG_SEED_LENGTH;
     FILE *rd = fopen("/dev/urandom", "rb");
-    fread(seeder + 1 + HDRBG_SEED_LENGTH, sizeof *seeder, HDRBG_SECURITY_STRENGTH, rd);
+    s_iter += fread(s_iter, sizeof *seeder, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
 
     hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
@@ -265,7 +267,10 @@ streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
     while(m_length-- > 0)
     {
         char s[3];
-        fscanf(tv, " %2s", s);
+        if(fscanf(tv, " %2s", s) != 1)
+        {
+            return;
+        }
         *m_bytes++ = strtol(s, NULL, 16);
     }
 }
@@ -273,7 +278,7 @@ streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
 /******************************************************************************
  * Verify that the cryptographically secure pseudorandom number generator is
  * working as specified. This function is meant for testing purposes only;
- * using it outside the test environment results in undefined behaviour.
+ * using it outside the test environment may result in undefined behaviour.
  *****************************************************************************/
 void
 hdrbg_test(void)
@@ -288,7 +293,10 @@ hdrbg_test(void)
     uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
 
     // Without prediction resistance.
-    fscanf(tv, "%zu", &count);
+    if(fscanf(tv, "%zu", &count) != 1)
+    {
+        return;
+    }
     while(count-- > 0)
     {
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
