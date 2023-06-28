@@ -14,7 +14,7 @@ memdump(uint8_t const *bytes, size_t length)
 {
     while(length-- > 0)
     {
-        fprintf(stderr, "%02"PRIX8, *bytes++);
+        fprintf(stderr, "%02"PRIx8, *bytes++);
     }
     fprintf(stderr, "\n");
 }

@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <ctype.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -19,6 +21,11 @@
 #define HDRBG_OUTPUT_LENGTH 32
 #define HDRBG_REQUEST_LIMIT  (1ULL << 16)
 #define HDRBG_RESEED_INTERVAL (1ULL << 48)
+
+// Characteristics of test vectors.
+#define HDRBG_TV_SEEDER_LENGTH 48
+#define HDRBG_TV_RESEEDER_LENGTH (HDRBG_SEED_LENGTH + 33)
+#define HDRBG_TV_REQUEST_LENGTH 128
 
 #ifndef __STDC_NO_ATOMICS__
 static _Atomic uint64_t
@@ -64,7 +71,6 @@ add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t
         carry >>= 8;
     }
 }
-
 
 /******************************************************************************
  * Hash derivation function. Transform the input bytes into the required number
@@ -146,7 +152,7 @@ hdrbg_seed(struct hdrbg_t *hd, uint8_t *seeder, size_t length)
     hd->V[0] = 0x00U;
     hash_df(seeder, length, hd->V + 1, HDRBG_SEED_LENGTH);
     hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C, HDRBG_SEED_LENGTH);
-    hd->gen_count = 0;
+    hd->gen_count = 1;
 }
 
 /******************************************************************************
@@ -243,4 +249,61 @@ hdrbg_delete(struct hdrbg_t *hd)
 {
     memclear(hd, sizeof *hd);
     free(hd);
+}
+
+/******************************************************************************
+ * Read hexadecimal characters from a stream. Store the bytes of the number
+ * they represent in a big-endian array.
+ *
+ * @param tv Stream to read from.
+ * @param m_bytes Array to store the bytes in.
+ * @param m_length Number of bytes to store.
+ *****************************************************************************/
+static void
+streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
+{
+    while(m_length-- > 0)
+    {
+        char s[3];
+        fscanf(tv, " %2s", s);
+        *m_bytes++ = strtol(s, NULL, 16);
+    }
+}
+
+/******************************************************************************
+ * Verify that the cryptographically secure pseudorandom number generator is
+ * working as specified. This function is meant for testing purposes only;
+ * using it outside the test environment results in undefined behaviour.
+ *****************************************************************************/
+void
+hdrbg_test(void)
+{
+    struct hdrbg_t *hd = malloc(sizeof *hd);
+    FILE *tv = fopen("Hash_DRBG.txt", "r");
+
+    size_t count;
+    uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
+    uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH];
+    uint8_t expected[HDRBG_TV_REQUEST_LENGTH];
+    uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
+
+    // Without prediction resistance.
+    fscanf(tv, "%zu", &count);
+    while(count-- > 0)
+    {
+        streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
+        hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
+        reseeder[0] = 0x01U;
+        memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
+        streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
+        hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+        streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
+        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
+    }
+
+    fclose(tv);
+    free(hd);
+    printf("All tests passed.\n");
 }
