@@ -36,8 +36,8 @@ seq_num = 0;
 
 struct hdrbg_t
 {
-    // The first member is prepended with a byte of zeros whenever it is
-    // processed, so keep an extra byte.
+    // The first member is prepended with a byte whenever it is processed, so
+    // keep an extra byte.
     uint8_t V[HDRBG_SEED_LENGTH + 1];
     uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
@@ -78,8 +78,8 @@ add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t
  *
  * @param m_bytes_ Input bytes.
  * @param m_length_ Number of input bytes.
- * @param h_bytes Array to store the output bytes in. (It must have enough
- *     space to store the required number of output bytes.)
+ * @param h_bytes Array to store the output bytes in. (It must have sufficient
+ *     space for `h_length` elements.)
  * @param h_length Number of output bytes required.
  *****************************************************************************/
 static void
@@ -88,8 +88,8 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
     // Construct the data to be hashed.
     size_t m_length = 5 + m_length_;
     uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
-    uint32_t bits = (uint32_t)h_length << 3;
-    memdecompose(m_bytes + 1, 4, bits);
+    uint32_t nbits = (uint32_t)h_length << 3;
+    memdecompose(m_bytes + 1, 4, nbits);
     memcpy(m_bytes + 5, m_bytes_, m_length_ * sizeof *m_bytes_);
 
     // Hash repeatedly.
@@ -99,10 +99,10 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
     {
         m_bytes[0] = i;
         sha256(m_bytes, m_length, tmp);
-        size_t length = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
-        memcpy(h_bytes, tmp, length * sizeof *h_bytes);
-        h_length -= length;
-        h_bytes += length;
+        size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
+        memcpy(h_bytes, tmp, len * sizeof *h_bytes);
+        h_length -= len;
+        h_bytes += len;
     }
     memclear(m_bytes, m_length * sizeof *m_bytes);
     free(m_bytes);
@@ -113,8 +113,8 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
  * bytes using a hash function.
  *
  * @param m_bytes_ Input bytes. Must be an array of length `HDRBG_SEED_LENGTH`.
- * @param h_bytes Array to store the output bytes in. (It must have enough
- *     space to store the required number of output bytes.)
+ * @param h_bytes Array to store the output bytes in. (It must have sufficient
+ *     space for `h_length` elements.)
  * @param h_length Number of output bytes required.
  *****************************************************************************/
 static void
@@ -131,10 +131,10 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
     for(size_t i = 0; i < iterations; ++i)
     {
         sha256(m_bytes, HDRBG_SEED_LENGTH, tmp);
-        size_t length = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
-        memcpy(h_bytes, tmp, length * sizeof *h_bytes);
-        h_length -= length;
-        h_bytes += length;
+        size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
+        memcpy(h_bytes, tmp, len * sizeof *h_bytes);
+        h_length -= len;
+        h_bytes += len;
         add_accumulate(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
     }
 }
@@ -143,14 +143,14 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
  * Set the members of an HDRBG object.
  *
  * @param hd HDRBG object.
- * @param seeder Array to derive the values of the members from.
- * @param length Number of elements in the array.
+ * @param s_bytes Array to derive the values of the members from.
+ * @param s_length Number of elements in the array.
  *****************************************************************************/
 static void
-hdrbg_seed(struct hdrbg_t *hd, uint8_t *seeder, size_t length)
+hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
 {
     hd->V[0] = 0x00U;
-    hash_df(seeder, length, hd->V + 1, HDRBG_SEED_LENGTH);
+    hash_df(s_bytes, s_length, hd->V + 1, HDRBG_SEED_LENGTH);
     hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C, HDRBG_SEED_LENGTH);
     hd->gen_count = 1;
 }
@@ -189,16 +189,16 @@ void
 hdrbg_renew(struct hdrbg_t *hd)
 {
     // Obtain some entropy.
-    uint8_t seeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH];
-    uint8_t *s_iter = seeder;
-    *s_iter++ = 0x01U;
-    memcpy(s_iter, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *seeder);
-    s_iter += HDRBG_SEED_LENGTH;
+    uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH];
+    uint8_t *r_iter = reseeder;
+    *r_iter++ = 0x01U;
+    memcpy(r_iter, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
+    r_iter += HDRBG_SEED_LENGTH;
     FILE *rd = fopen("/dev/urandom", "rb");
-    s_iter += fread(s_iter, sizeof *seeder, HDRBG_SECURITY_STRENGTH, rd);
+    r_iter += fread(r_iter, sizeof *reseeder, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
 
-    hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
+    hdrbg_seed(hd, reseeder, sizeof reseeder / sizeof *reseeder);
 }
 
 /******************************************************************************
@@ -209,8 +209,8 @@ hdrbg_renew(struct hdrbg_t *hd)
  * @param prediction_resistance If `true`, the HDRBG object will be
  *     reinitialised before generating the bytes. If `false`, the bytes will be
  *     generated directly.
- * @param r_bytes Array to store the output bytes in. (It must have enough
- *     space to store the required number of output bytes.)
+ * @param r_bytes Array to store the output bytes in. (It must have sufficient
+ *     space for `r_length` elements.)
  * @param r_length Number of output bytes required. At most 65536.
  *
  * @return `true` if the bytes were generated, else `false`.
@@ -258,7 +258,8 @@ hdrbg_delete(struct hdrbg_t *hd)
  * they represent in a big-endian array.
  *
  * @param tv Stream to read from.
- * @param m_bytes Array to store the bytes in.
+ * @param m_bytes Array to store the bytes in. (It must have sufficient space
+ *     for `m_length` elements.)
  * @param m_length Number of bytes to store.
  *****************************************************************************/
 static void

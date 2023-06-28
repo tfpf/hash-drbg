@@ -36,13 +36,13 @@ sha256_bytes[32];
 /******************************************************************************
  * Calculate the hash of the given data.
  *
- * @param m_bytes_ Array of numbers representing the big-endian data to hash.
- * @param m_length_ Numer of elements in the array.
- * @param h_bytes Array to store the big-endian hash in. (It must have enough
- *     space to store 32 elements.) If `NULL`, the hash will be stored in a
- *     static array.
+ * @param m_bytes_ Array of bytes representing the big-endian data to hash.
+ * @param m_length_ Number of bytes to process. At most 2305843009213693951.
+ * @param h_bytes Array to store the bytes of the hash in, in big-endian order.
+ *     (It must have sufficient space for 32 elements.) If `NULL`, the hash
+ *     will be stored in a static array.
  *
- * @return Array of numbers representing the big-endian hash of the data.
+ * @return Array of bytes representing the big-endian hash of the data.
  *****************************************************************************/
 uint8_t *
 sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
@@ -53,13 +53,13 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 
     // Create a padded copy whose width in bits is a multiple of 512. Note that
     // the amount of zero-padding required is odd, hence a non-zero number.
-    uint64_t bits = (uint64_t)m_length_ << 3;
-    size_t zeros = 512 - ((bits + 65) & 511U);
+    uint64_t nbits = (uint64_t)m_length_ << 3;
+    size_t zeros = 512 - ((nbits + 65) & 511U);
     size_t m_length = m_length_ + ((1 + zeros) >> 3) + 8;
     uint8_t *m_bytes = calloc(m_length, sizeof *m_bytes);
     memcpy(m_bytes, m_bytes_, m_length_ * sizeof *m_bytes_);
     m_bytes[m_length_] = 0x80U;
-    memdecompose(m_bytes + m_length - 8, 8, bits);
+    memdecompose(m_bytes + m_length - 8, 8, nbits);
 
     // Process each 512-bit chunk.
     uint8_t *m_iter = m_bytes;

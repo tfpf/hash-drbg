@@ -3,18 +3,20 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "extras.h"
+
 /******************************************************************************
  * Display the given data in hexadecimal form.
  *
- * @param bytes Array of numbers representing the big-endian data to display.
- * @param length Numer of elements in the array.
+ * @param m_bytes Array of bytes representing the big-endian data to display.
+ * @param m_length Numer of bytes to display.
  *****************************************************************************/
 void
-memdump(uint8_t const *bytes, size_t length)
+memdump(uint8_t const *m_bytes, size_t m_length)
 {
-    while(length-- > 0)
+    while(m_length-- > 0)
     {
-        fprintf(stderr, "%02"PRIx8, *bytes++);
+        fprintf(stderr, "%02"PRIx8, *m_bytes++);
     }
     fprintf(stderr, "\n");
 }
@@ -24,29 +26,29 @@ memdump(uint8_t const *bytes, size_t length)
  * shouldn't be optimised out when called just before freeing the memory.
  *
  * @param ptr
- * @param size
+ * @param sz
  *****************************************************************************/
 void
-memclear(void *ptr, size_t size)
+memclear(void *ptr, size_t sz)
 {
-    memset(ptr, 0, size);
+    memset(ptr, 0, sz);
 }
 
 /******************************************************************************
  * Compose some bytes into a number.
  *
- * @param addr Starting address of the bytes.
- * @param length Number of bytes to process. At most 8.
+ * @param m_bytes Array of bytes.
+ * @param m_length Number of bytes to process. At most 8.
  *
  * @return Bytes interpreted as a big-endian integer.
  *****************************************************************************/
 uint64_t
-memcompose(uint8_t const *addr, size_t length)
+memcompose(uint8_t const *m_bytes, size_t m_length)
 {
     uint64_t value = 0;
-    while(length-- > 0)
+    while(m_length-- > 0)
     {
-        value = value << 8 | *addr++;
+        value = value << 8 | *m_bytes++;
     }
     return value;
 }
@@ -54,20 +56,20 @@ memcompose(uint8_t const *addr, size_t length)
 /******************************************************************************
  * Decompose the bytes of a number.
  *
- * @param addr Starting address from which the bytes of the number will be
- *     written in big-endian order.
- * @param length Number of bytes to process. At most 8.
+ * @param m_bytes Array to store the bytes of the number in, in big-endian
+ *     order. (It must have sufficient space for `m_length` elements.)
+ * @param m_length Number of bytes to process. At most 8.
  * @param value Number to be decomposed.
  *
- * @return Number of bytes processed (`length`).
+ * @return Number of bytes processed (`m_length`).
  *****************************************************************************/
 size_t
-memdecompose(uint8_t *addr, size_t length, uint64_t value)
+memdecompose(uint8_t *m_bytes, size_t m_length, uint64_t value)
 {
-    for(size_t i = 0; i < length; ++i)
+    for(size_t i = 0; i < m_length; ++i)
     {
-        addr[length - 1 - i] = value;
+        m_bytes[m_length - 1 - i] = value;
         value >>= 8;
     }
-    return length;
+    return m_length;
 }
