@@ -33,3 +33,28 @@ git clone https://github.com/tfpf/hash-drbg.git
 cd hash-drbg
 ./install.sh
 ```
+
+### Quick Start
+Put the following code in a file `example.c`:
+```C
+#include <hdrbg.h>
+#include <stdio.h>
+
+int main(void)
+{
+    hdrbg_new(0);
+    for(int i = 0; i < 10; ++i)
+    {
+        printf("%llu\n", hdrbg_rand(NULL));
+    }
+}
+```
+compile it with
+```
+gcc -o example example.c -lhdrbg
+```
+and run it using
+```sh
+./example
+```
+to see some random numbers.
