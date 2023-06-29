@@ -18,7 +18,7 @@ struct hdrbg_t;
 extern "C"
 {
 #endif
-struct hdrbg_t *hdrbg_new(void);
+struct hdrbg_t *hdrbg_new(bool dma);
 void hdrbg_renew(struct hdrbg_t *hd);
 bool hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length);
 void hdrbg_delete(struct hdrbg_t *hd);

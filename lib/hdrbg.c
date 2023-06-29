@@ -47,6 +47,9 @@ seq_num = 0;
 static int
 _;
 
+static struct hdrbg_t
+hdrbg;
+
 /******************************************************************************
  * Add two numbers. Overwrite the first number with the result, disregarding
  * any carried bytes.
@@ -55,7 +58,7 @@ _;
  * @param a_length Number of bytes of the first number.
  * @param b_bytes Array of bytes of the second number in big-endian order.
  * @param b_length Number of bytes of the second number. Must be less than or
- *     equal to the number of bytes of the first number.
+ *     equal to `a_length`.
  *****************************************************************************/
 static void
 add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t b_length)
@@ -160,18 +163,12 @@ hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
 }
 
 /******************************************************************************
- * Create and initialise an HDRBG object with 256-bit security strength.
- * Prediction resistance is supported. A personalisation string is not used.
- *
- * @return Initialised HDRBG object.
+ * Create and/or initialise (seed) an HDRBG object.
  *****************************************************************************/
 struct hdrbg_t *
-hdrbg_new(void)
+hdrbg_new(bool dma)
 {
-    struct hdrbg_t *hd = malloc(sizeof *hd);
-
-    // Obtain some entropy and a nonce. Construct the nonce using the timestamp
-    // and a sequence number.
+    struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
     uint8_t seeder[HDRBG_SECURITY_STRENGTH + 12];
     uint8_t *s_iter = seeder;
     FILE *rd = fopen("/dev/urandom", "rb");
@@ -179,20 +176,17 @@ hdrbg_new(void)
     fclose(rd);
     s_iter += memdecompose(s_iter, 4, (uint32_t)time(NULL));
     s_iter += memdecompose(s_iter, 8, ++seq_num);
-
     hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
-    return hd;
+    return dma ? hd : NULL;
 }
 
 /******************************************************************************
- * Reinitialise an HDRBG object. Additional input is not used.
- *
- * @param hd HDRBG object. Must have been created using `hdrbg_new`.
+ * Reinitialise (reseed) an HDRBG object.
  *****************************************************************************/
 void
 hdrbg_renew(struct hdrbg_t *hd)
 {
-    // Obtain some entropy.
+    hd = hd == NULL ? &hdrbg : hd;
     uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH];
     uint8_t *r_iter = reseeder;
     *r_iter++ = 0x01U;
@@ -201,23 +195,11 @@ hdrbg_renew(struct hdrbg_t *hd)
     FILE *rd = fopen("/dev/urandom", "rb");
     r_iter += fread(r_iter, sizeof *reseeder, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
-
     hdrbg_seed(hd, reseeder, sizeof reseeder / sizeof *reseeder);
 }
 
 /******************************************************************************
- * Generate cryptographically secure pseudorandom bytes. Additional input is
- * not used.
- *
- * @param hd HDRBG object. Must have been created using `hdrbg_new`.
- * @param prediction_resistance If `true`, the HDRBG object will be
- *     reinitialised before generating the bytes. If `false`, the bytes will be
- *     generated directly.
- * @param r_bytes Array to store the output bytes in. (It must have sufficient
- *     space for `r_length` elements.)
- * @param r_length Number of output bytes required. At most 65536.
- *
- * @return `true` if the bytes were generated, else `false`.
+ * Generate cryptographically secure pseudorandom bytes using an HDRBG object.
  *****************************************************************************/
 bool
 hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
@@ -226,6 +208,7 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
     {
         return false;
     }
+    hd = hd == NULL ? &hdrbg : hd;
     if(prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
     {
         hdrbg_renew(hd);
@@ -245,13 +228,16 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
 }
 
 /******************************************************************************
- * Clear and destroy an HDRBG object.
- *
- * @param hd HDRBG object. Must have been created using `hdrbg_new`.
+ * Clear (zero) and/or destroy an HDRBG object.
  *****************************************************************************/
 void
 hdrbg_delete(struct hdrbg_t *hd)
 {
+    if(hd == NULL)
+    {
+        memclear(&hdrbg, sizeof hdrbg);
+        return;
+    }
     memclear(hd, sizeof *hd);
     free(hd);
 }
@@ -280,16 +266,14 @@ streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
 }
 
 /******************************************************************************
- * Verify that the cryptographically secure pseudorandom number generator is
- * working as specified. This function is meant for testing purposes only;
- * using it outside the test environment may result in undefined behaviour.
+ * Test a particular HDRBG object.
+ *
+ * @param hd HDRBG object.
  *****************************************************************************/
-void
-hdrbg_test(void)
+static void
+hdrbg_test_object(struct hdrbg_t *hd)
 {
-    struct hdrbg_t *hd = malloc(sizeof *hd);
     FILE *tv = fopen("Hash_DRBG.txt", "r");
-
     size_t count;
     uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
     uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
@@ -298,9 +282,8 @@ hdrbg_test(void)
 
     // Without prediction resistance.
     _ = fscanf(tv, "%zu", &count);
-    for(size_t i = 1; i <= count; ++i)
+    while(count-- > 0)
     {
-        printf("Running test %zu/%zu without prediction resistance.\r", i, count);
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
@@ -311,15 +294,12 @@ hdrbg_test(void)
         streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
         assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
     }
-    printf("\n");
 
-    // With prediction resistance. Generating with prediction resistance is the
-    // same as reinitialising and generating without prediction resistance, so
-    // the code is similar.
+    // With prediction resistance. Essentially the same as as reinitialising
+    // before generating.
     _ = fscanf(tv, "%zu", &count);
-    for(size_t i = 1; i <= count; ++i)
+    while(count-- > 0)
     {
-        printf("Running test %zu/%zu with prediction resistance.\r", i, count);
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
@@ -333,9 +313,25 @@ hdrbg_test(void)
         streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
         assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
     }
-    printf("\n");
 
     fclose(tv);
+}
+
+/******************************************************************************
+ * Verify that the cryptographically secure pseudorandom number generator is
+ * working as specified. This function is meant for testing purposes only;
+ * using it outside the test environment may result in undefined behaviour.
+ *****************************************************************************/
+void
+hdrbg_test(void)
+{
+    printf("Testing the internal HDRBG object.\n");
+    hdrbg_test_object(&hdrbg);
+    printf("All tests passed.\n");
+
+    printf("Testing a dynamically-allocated HDRBG object.\n");
+    struct hdrbg_t *hd = malloc(sizeof *hd);
+    hdrbg_test_object(hd);
     free(hd);
     printf("All tests passed.\n");
 }
