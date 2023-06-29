@@ -49,6 +49,17 @@ initialised/reinitialised, the behaviour is undefined.
 ---
 
 ```C
+uint64_t hdrbg_rand(struct hdrbg_t *hd);
+```
+Generate a cryptographically secure pseudorandom number using an HDRBG object. If it had not been previously
+initialised/reinitialised, the behaviour is undefined. This function simply generates 8 bytes using `hdrbg_gen` without
+prediction resistance.
+* `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
+* → Uniform pseudorandom 64-bit number.
+
+---
+
+```C
 void hdrbg_delete(struct hdrbg_t *hd);
 ```
 Clear (zero) and/or destroy an HDRBG object.

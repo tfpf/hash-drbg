@@ -199,7 +199,7 @@ hdrbg_renew(struct hdrbg_t *hd)
 }
 
 /******************************************************************************
- * Generate cryptographically secure pseudorandom bytes using an HDRBG object.
+ * Generate cryptographically secure pseudorandom bytes.
  *****************************************************************************/
 bool
 hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
@@ -225,6 +225,17 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
     return true;
+}
+
+/******************************************************************************
+ * Generate a cryptographically secure pseudorandom number.
+ *****************************************************************************/
+uint64_t
+hdrbg_rand(struct hdrbg_t *hd)
+{
+    uint8_t value[8];
+    hdrbg_gen(hd, false, value, 8);
+    return memcompose(value, 8);
 }
 
 /******************************************************************************
