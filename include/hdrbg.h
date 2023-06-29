@@ -1,9 +1,16 @@
 #ifndef TFPF_HASH_DRBG_INCLUDE_HDRBG_H_
-#define TFPF_HASH_DRBG_INCLUDE_HDRBG_H_
+#define TFPF_HASH_DRBG_INCLUDE_HDRBG_H_ "1.0.0"
 
+#ifdef __cplusplus
+#include <cinttypes>
+#include <cstddef>
+#define uint8_t std::uint8_t
+#define size_t std::size_t
+#else
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
+#endif
 
 struct hdrbg_t;
 
@@ -18,6 +25,11 @@ void hdrbg_delete(struct hdrbg_t *hd);
 void hdrbg_test(void);
 #ifdef __cplusplus
 }
+#endif
+
+#ifdef __cplusplus
+#undef uint8_t
+#undef size_t
 #endif
 
 #endif  // TFPF_HASH_DRBG_INCLUDE_HDRBG_H_
