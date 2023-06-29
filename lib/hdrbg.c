@@ -27,16 +27,6 @@
 #define HDRBG_TV_RESEEDER_LENGTH (HDRBG_SEED_LENGTH + 33)
 #define HDRBG_TV_REQUEST_LENGTH 128
 
-#ifndef __STDC_NO_ATOMICS__
-static _Atomic uint64_t
-#else
-static uint64_t
-#endif
-seq_num = 0;
-
-// To suppress warnings about unused return values when I know what I am doing.
-static int _;
-
 struct hdrbg_t
 {
     // The first member is prepended with a byte whenever it is processed, so
@@ -45,6 +35,17 @@ struct hdrbg_t
     uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
 };
+
+#ifndef __STDC_NO_ATOMICS__
+static _Atomic uint64_t
+#else
+static uint64_t
+#endif
+seq_num = 0;
+
+// To suppress warnings about unused return values when I know what I am doing.
+static int
+_;
 
 /******************************************************************************
  * Add two numbers. Overwrite the first number with the result, disregarding
@@ -155,7 +156,7 @@ hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
     hd->V[0] = 0x00U;
     hash_df(s_bytes, s_length, hd->V + 1, HDRBG_SEED_LENGTH);
     hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C, HDRBG_SEED_LENGTH);
-    hd->gen_count = 1;
+    hd->gen_count = 0;
 }
 
 /******************************************************************************
@@ -225,7 +226,7 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
     {
         return false;
     }
-    if(prediction_resistance || hd->gen_count > HDRBG_RESEED_INTERVAL)
+    if(prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
     {
         hdrbg_renew(hd);
     }
@@ -236,11 +237,10 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
     uint8_t tmp[HDRBG_OUTPUT_LENGTH];
     sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp);
     uint8_t gen_count[8];
-    memdecompose(gen_count, 8, hd->gen_count);
+    memdecompose(gen_count, 8, ++hd->gen_count);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, tmp, HDRBG_OUTPUT_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
-    ++hd->gen_count;
     return true;
 }
 
@@ -298,9 +298,9 @@ hdrbg_test(void)
 
     // Without prediction resistance.
     _ = fscanf(tv, "%zu", &count);
-    for(size_t i = 0; i < count; ++i)
+    for(size_t i = 1; i <= count; ++i)
     {
-        printf("Running test %zu/%zu without prediction resistance.\r", i + 1, count);
+        printf("Running test %zu/%zu without prediction resistance.\r", i, count);
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
@@ -317,9 +317,9 @@ hdrbg_test(void)
     // same as reinitialising and generating without prediction resistance, so
     // the code is similar.
     _ = fscanf(tv, "%zu", &count);
-    for(size_t i = 0; i < count; ++i)
+    for(size_t i = 1; i <= count; ++i)
     {
-        printf("Running test %zu/%zu with prediction resistance.\r", i + 1, count);
+        printf("Running test %zu/%zu with prediction resistance.\r", i, count);
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
