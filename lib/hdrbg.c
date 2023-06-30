@@ -44,7 +44,7 @@ static uint64_t
 seq_num = 0;
 
 // To suppress warnings about unused return values when I know what I am doing.
-static int
+static int unsigned
 _;
 
 static struct hdrbg_t
@@ -169,12 +169,12 @@ struct hdrbg_t *
 hdrbg_new(bool dma)
 {
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
-    uint8_t seeder[HDRBG_SECURITY_STRENGTH + 12];
+    uint8_t seeder[HDRBG_SECURITY_STRENGTH + 16];
     uint8_t *s_iter = seeder;
     FILE *rd = fopen("/dev/urandom", "rb");
     s_iter += fread(s_iter, sizeof *s_iter, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
-    s_iter += memdecompose(s_iter, 4, (uint32_t)time(NULL));
+    s_iter += memdecompose(s_iter, 8, time(NULL));
     s_iter += memdecompose(s_iter, 8, ++seq_num);
     hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
     return dma ? hd : NULL;
@@ -187,13 +187,10 @@ void
 hdrbg_renew(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
-    uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH];
-    uint8_t *r_iter = reseeder;
-    *r_iter++ = 0x01U;
-    memcpy(r_iter, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-    r_iter += HDRBG_SEED_LENGTH;
+    uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
+    memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
     FILE *rd = fopen("/dev/urandom", "rb");
-    r_iter += fread(r_iter, sizeof *reseeder, HDRBG_SECURITY_STRENGTH, rd);
+    _ = fread(reseeder + 1 + HDRBG_SEED_LENGTH, sizeof *reseeder, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
     hdrbg_seed(hd, reseeder, sizeof reseeder / sizeof *reseeder);
 }
