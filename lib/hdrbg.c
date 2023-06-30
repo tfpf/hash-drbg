@@ -277,55 +277,70 @@ streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
 }
 
 /******************************************************************************
- * Test a particular HDRBG object.
+ * Test a particular HDRBG object for a given prediction resistance setting.
  *
  * @param hd HDRBG object.
+ * @param prediction_resistance Prediction resistance.
+ * @param tv Test vectors file.
  *****************************************************************************/
 static void
-hdrbg_test_object(struct hdrbg_t *hd)
+hdrbg_test_object_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 {
-    FILE *tv = fopen("Hash_DRBG.txt", "r");
     size_t count;
+    _ = fscanf(tv, "%zu", &count);
+
     uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
     uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
     uint8_t expected[HDRBG_TV_REQUEST_LENGTH];
     uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
 
-    // Without prediction resistance.
-    _ = fscanf(tv, "%zu", &count);
+    // The test sequence for no prediction resistance is: initialise,
+    // reinitialise, generate and generate. That for prediction resistance is:
+    // initialise, generate and generate. A request for prediction resistance
+    // means that the HDRBG object should be reinitialised before generation,
+    // so the latter sequence is equivalent to: initialise, reinitialise,
+    // generate, reinitialise and generate without prediction resistance.
     while(count-- > 0)
     {
+        // Initialise.
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
+
+        // Reinitialise.
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
         streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
         hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+
+        // Generate.
         hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+
+        // Reinitialise.
+        if(prediction_resistance)
+        {
+            memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
+            streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
+            hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+        }
+
+        // Generate.
         hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+
         streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
         assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
     }
+}
 
-    // With prediction resistance. Essentially the same as as reinitialising
-    // before generating.
-    _ = fscanf(tv, "%zu", &count);
-    while(count-- > 0)
-    {
-        streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
-        hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
-        memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-        streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
-        hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
-        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
-        memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-        streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
-        hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
-        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
-        streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
-        assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
-    }
-
-    fclose(tv);
+/******************************************************************************
+ * Test a particular HDRBG object.
+ *
+ * @param hd HDRBG object.
+ * @param tv Test vectors file.
+ *****************************************************************************/
+static void
+hdrbg_test_object(struct hdrbg_t *hd, FILE *tv)
+{
+    hdrbg_test_object_pr(hd, false, tv);
+    hdrbg_test_object_pr(hd, true, tv);
 }
 
 /******************************************************************************
@@ -337,12 +352,15 @@ void
 hdrbg_test(void)
 {
     printf("Testing the internal HDRBG object.\n");
-    hdrbg_test_object(&hdrbg);
+    FILE *tv = fopen("Hash_DRBG.txt", "r");
+    hdrbg_test_object(&hdrbg, tv);
     printf("All tests passed.\n");
 
     printf("Testing a dynamically-allocated HDRBG object.\n");
+    rewind(tv);
     struct hdrbg_t *hd = malloc(sizeof *hd);
-    hdrbg_test_object(hd);
+    hdrbg_test_object(hd, tv);
     free(hd);
+    fclose(tv);
     printf("All tests passed.\n");
 }
