@@ -9,7 +9,8 @@
 This package provides a cryptographically secure pseudorandom number generator for C and C++. It is mostly compliant
 with the specification given in NIST SP 800-90A.
 
-See [`doc`](doc) for the documentation of this package. [`examples`](examples) contains usage examples.
+See [`doc`](doc) for the documentation of this package. [`examples`](examples) contains usage examples. For performance
+analysis, go to [`benchmarks`](benchmarks).
 
 ## Installation Requirements
 These are the versions I have tested the installation with. Older versions may also work.
