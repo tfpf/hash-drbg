@@ -8,7 +8,14 @@
 | Personalisation String | No       |
 
 * SHA-256 has been implemented from scratch, because I wanted this package to have no dependencies.
-* It is assumed that `/dev/urandom` always provides sufficient entropy for seeding.
+* `/dev/urandom` is read to obtain entropy for seeding and reseeding.
+  * It is assumed to always provide sufficient entropy.
+* Nonces are generating by appending a monotonically increasing sequence number to the timestamp.
+  * If the compiler supports atomics (GCC and Clang do), the sequence number is an atomic integer—whence, unique nonces
+    will be generated even in a program with multiple threads.
+  * Otherwise, two threads might end up with the same nonce because of a data race. (Two processes which load the
+    library at the same time might also produce the same nonce, because the sequence number is initialised to 0.) Which
+    shouldn't be a problem, because their entropy inputs will be different with high probability.
 * In C, a byte need not be 8 bits wide. However, this implementation uses the term 'byte' to refer to an 8-bit number.
   Hence, fixed-width integer types are used liberally.
 

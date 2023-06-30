@@ -10,7 +10,11 @@
 
 #ifndef __STDC_NO_ATOMICS__
 #include <stdatomic.h>
+static atomic_ullong
+#else
+static int long long unsigned
 #endif
+seq_num = 0;
 
 #include "extras.h"
 #include "hdrbg.h"
@@ -35,13 +39,6 @@ struct hdrbg_t
     uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
 };
-
-#ifndef __STDC_NO_ATOMICS__
-static _Atomic uint64_t
-#else
-static uint64_t
-#endif
-seq_num = 0;
 
 // To suppress warnings about unused return values when I know what I am doing.
 static int unsigned
@@ -175,7 +172,7 @@ hdrbg_new(bool dma)
     s_iter += fread(s_iter, sizeof *s_iter, HDRBG_SECURITY_STRENGTH, rd);
     fclose(rd);
     s_iter += memdecompose(s_iter, 8, time(NULL));
-    s_iter += memdecompose(s_iter, 8, ++seq_num);
+    s_iter += memdecompose(s_iter, 8, seq_num++);
     hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
     return dma ? hd : NULL;
 }
