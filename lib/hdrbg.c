@@ -233,6 +233,31 @@ hdrbg_rand(struct hdrbg_t *hd)
 }
 
 /******************************************************************************
+ * Generate a cryptographically secure pseudorandom residue.
+ *****************************************************************************/
+uint64_t
+hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus)
+{
+    uint64_t upper = 0xFFFFFFFFFFFFFFFFU - 0xFFFFFFFFFFFFFFFFU % modulus;
+    uint64_t r;
+    do
+    {
+        r = hdrbg_rand(hd);
+    }
+    while(r >= upper);
+    return r % modulus;
+}
+
+/******************************************************************************
+ * Generate a cryptographically secure pseudorandom fraction.
+ *****************************************************************************/
+double long
+hdrbg_real(struct hdrbg_t *hd)
+{
+    return (double long)hdrbg_rand(hd) / 0xFFFFFFFFFFFFFFFFU;
+}
+
+/******************************************************************************
  * Clear (zero) and/or destroy an HDRBG object.
  *****************************************************************************/
 void
@@ -278,7 +303,7 @@ streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
  * @param tv Test vectors file.
  *****************************************************************************/
 static void
-hdrbg_test_object_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
+hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 {
     size_t count;
     _ = fscanf(tv, "%zu", &count);
@@ -331,10 +356,10 @@ hdrbg_test_object_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
  * @param tv Test vectors file.
  *****************************************************************************/
 static void
-hdrbg_test_object(struct hdrbg_t *hd, FILE *tv)
+hdrbg_test_obj(struct hdrbg_t *hd, FILE *tv)
 {
-    hdrbg_test_object_pr(hd, false, tv);
-    hdrbg_test_object_pr(hd, true, tv);
+    hdrbg_test_obj_pr(hd, false, tv);
+    hdrbg_test_obj_pr(hd, true, tv);
 }
 
 /******************************************************************************
@@ -347,13 +372,13 @@ hdrbg_test(void)
 {
     printf("Testing the internal HDRBG object.\n");
     FILE *tv = fopen("Hash_DRBG.txt", "r");
-    hdrbg_test_object(&hdrbg, tv);
+    hdrbg_test_obj(&hdrbg, tv);
     printf("All tests passed.\n");
 
     printf("Testing a dynamically-allocated HDRBG object.\n");
     rewind(tv);
     struct hdrbg_t *hd = malloc(sizeof *hd);
-    hdrbg_test_object(hd, tv);
+    hdrbg_test_obj(hd, tv);
     free(hd);
     fclose(tv);
     printf("All tests passed.\n");

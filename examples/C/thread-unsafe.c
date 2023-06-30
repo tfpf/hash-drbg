@@ -18,6 +18,10 @@ int main(void)
     {
         printf("%"PRIu64" ", hdrbg_rand(NULL));
     }
+    for(int i = 0; i < 4; ++i)
+    {
+        printf("%Lf ", hdrbg_real(NULL));
+    }
     printf("\n");
     hdrbg_delete(NULL);
 }

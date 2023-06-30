@@ -11,11 +11,12 @@
 * `/dev/urandom` is read to obtain entropy for seeding and reseeding.
   * It is assumed to always provide sufficient entropy.
 * Nonces are generating by appending a monotonically increasing sequence number to the timestamp.
-  * If the compiler supports atomics (GCC and Clang do), the sequence number is an atomic integer—whence, unique nonces
-    will be generated even in a program with multiple threads.
-  * Otherwise, two threads might end up with the same nonce because of a data race. (Two processes which load the
-    library at the same time might also produce the same nonce, because the sequence number is initialised to 0.) Which
-    shouldn't be a problem, because their entropy inputs will be different with high probability.
+  * If the compiler supports atomics (GCC and Clang do), the sequence number is an atomic integer—whence, in a process
+    with multiple threads, no two threads will generate the same nonce.
+  * Otherwise, two threads might end up with the same nonce because of a data race. (Two threads in different processes
+    which load the library at the same time will also generate the same nonce, because the sequence number is
+    initialised to 0.) Which shouldn't be a problem, because their entropy inputs will be different with high
+    probability.
 * In C, a byte need not be 8 bits wide. However, this implementation uses the term 'byte' to refer to an 8-bit number.
   Hence, fixed-width integer types are used liberally.
 
@@ -59,10 +60,34 @@ initialised/reinitialised, the behaviour is undefined.
 uint64_t hdrbg_rand(struct hdrbg_t *hd);
 ```
 Generate a cryptographically secure pseudorandom number using an HDRBG object. If it had not been previously
-initialised/reinitialised, the behaviour is undefined. This function simply generates 8 bytes using `hdrbg_gen` without
-prediction resistance.
+initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_gen` without prediction
+resistance.
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
-* → Uniform pseudorandom 64-bit number.
+* → Uniform pseudorandom integer in the range 0 (inclusive) to 2<sup>64</sup> − 1 (inclusive).
+
+---
+
+```C
+uint64_t hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus);
+```
+Generate a cryptographically secure pseudorandom residue using an HDRBG object. If it had not been previously
+initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_rand`.
+* `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
+* `modulus` Positive integer.
+* → Uniform pseudorandom integer in the range 0 (inclusive) to `modulus` (exclusive).
+
+---
+
+```C
+double long hdrbg_real(struct hdrbg_t *hd);
+```
+Generate a cryptographically secure pseudorandom fraction using an HDRBG object. If it had not been previously
+initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_rand`.
+* `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
+* → Uniform pseudorandom real in the range 0 (inclusive) to 1 (inclusive).
+
+With compilers other than GCC and Clang, the range of the output can be different (at worst, calling this function can
+result in undefined behaviour) because the representation of floating-point numbers is not specified by the C standard.
 
 ---
 
