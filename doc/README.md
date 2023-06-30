@@ -79,6 +79,18 @@ initialised/reinitialised, the behaviour is undefined. This function internally 
 ---
 
 ```C
+int64_t hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right);
+```
+Generate a cryptographically secure pseudorandom residue offset using an HDRBG object. If it had not been previously
+initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_uint`.
+* `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
+* `left` Left end of the interval.
+* `right` Right end of the interval. Must be greater than `left`.
+* → Uniform pseudorandom integer in the range `left` (inclusive) to `right` (exclusive).
+
+---
+
+```C
 double long hdrbg_real(struct hdrbg_t *hd);
 ```
 Generate a cryptographically secure pseudorandom fraction using an HDRBG object. If it had not been previously

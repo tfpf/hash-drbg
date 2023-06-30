@@ -24,6 +24,7 @@ void hdrbg_renew(struct hdrbg_t *hd);
 bool hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length);
 uint64_t hdrbg_rand(struct hdrbg_t *hd);
 uint64_t hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus);
+int64_t hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right);
 double long hdrbg_real(struct hdrbg_t *hd);
 void hdrbg_delete(struct hdrbg_t *hd);
 void hdrbg_test(void);

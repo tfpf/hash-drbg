@@ -160,6 +160,27 @@ hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
 }
 
 /******************************************************************************
+ * Convert an unsigned integer into a signed integer in a safe manner.
+ * (According to the C standard, implicit conversion of an unsigned integer
+ * into a signed integer when the type of the latter cannot represent the value
+ * of the former results in implementation-defined behaviour.)
+ *
+ * @param ui Unsigned integer.
+ *
+ * @return Signed integer with value congruent to `ui` modulo 2 ** 64.
+ *****************************************************************************/
+static int64_t
+utos(uint64_t ui)
+{
+    if(ui <= 0x7FFFFFFFFFFFFFFFU)
+    {
+        return ui;
+    }
+    int64_t si = ui - 0x8000000000000000U;
+    return si - (int64_t)0x8000000000000000;
+}
+
+/******************************************************************************
  * Create and/or initialise (seed) an HDRBG object.
  *****************************************************************************/
 struct hdrbg_t *
@@ -246,6 +267,19 @@ hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus)
     }
     while(r >= upper);
     return r % modulus;
+}
+
+/******************************************************************************
+ * Generate a cryptographically secure pseudorandom residue offset.
+ *****************************************************************************/
+int64_t
+hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
+{
+    uint64_t uleft = left;
+    uint64_t uright = right;
+    uint64_t modulus = uright - uleft;
+    uint64_t r = hdrbg_uint(hd, modulus);
+    return utos(r + uleft);
 }
 
 /******************************************************************************
@@ -360,6 +394,16 @@ hdrbg_test_obj(struct hdrbg_t *hd, FILE *tv)
 {
     hdrbg_test_obj_pr(hd, false, tv);
     hdrbg_test_obj_pr(hd, true, tv);
+    for(int i = 0; i < 30000; ++i)
+    {
+        int64_t left = utos(hdrbg_rand(hd));
+        int64_t right = utos(hdrbg_rand(hd));
+        if(left < right)
+        {
+            int64_t middle = hdrbg_span(hd, left, right);
+            assert(left <= middle && middle < right);
+        }
+    }
 }
 
 /******************************************************************************
