@@ -184,7 +184,7 @@ utos(uint64_t ui)
  * Create and/or initialise (seed) an HDRBG object.
  *****************************************************************************/
 struct hdrbg_t *
-hdrbg_new(bool dma)
+hdrbg_init(bool dma)
 {
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
     uint8_t seeder[HDRBG_SECURITY_STRENGTH + 16];
@@ -202,7 +202,7 @@ hdrbg_new(bool dma)
  * Reinitialise (reseed) an HDRBG object.
  *****************************************************************************/
 void
-hdrbg_renew(struct hdrbg_t *hd)
+hdrbg_reinit(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
     uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
@@ -217,7 +217,7 @@ hdrbg_renew(struct hdrbg_t *hd)
  * Generate cryptographically secure pseudorandom bytes.
  *****************************************************************************/
 bool
-hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
+hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
 {
     if(r_length > HDRBG_REQUEST_LIMIT)
     {
@@ -226,7 +226,7 @@ hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size
     hd = hd == NULL ? &hdrbg : hd;
     if(prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
     {
-        hdrbg_renew(hd);
+        hdrbg_reinit(hd);
     }
     hash_gen(hd->V + 1, r_bytes, r_length);
 
@@ -249,7 +249,7 @@ uint64_t
 hdrbg_rand(struct hdrbg_t *hd)
 {
     uint8_t value[8];
-    hdrbg_gen(hd, false, value, 8);
+    hdrbg_fill(hd, false, value, 8);
     return memcompose(value, 8);
 }
 
@@ -295,7 +295,7 @@ hdrbg_real(struct hdrbg_t *hd)
  * Clear (zero) and/or destroy an HDRBG object.
  *****************************************************************************/
 void
-hdrbg_delete(struct hdrbg_t *hd)
+hdrbg_zero(struct hdrbg_t *hd)
 {
     if(hd == NULL)
     {
@@ -365,7 +365,7 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
 
         // Generate.
-        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        hdrbg_fill(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
 
         // Reinitialise.
         if(prediction_resistance)
@@ -376,7 +376,7 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         }
 
         // Generate.
-        hdrbg_gen(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
+        hdrbg_fill(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
 
         streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
         assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);

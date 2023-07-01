@@ -22,18 +22,18 @@
 
 # Functions
 ```C
-struct hdrbg_t *hdrbg_new(bool dma);
+struct hdrbg_t *hdrbg_init(bool dma);
 ```
 Create and/or initialise (seed) an HDRBG object.
 * `dma` Whether to use dynamic memory allocation. If `true`, an HDRBG object will be allocated dynamically and
   initialised. If `false`, the internal HDRBG object will be initialised.
-* → Initialised HDRBG object (which must be destroyed using `hdrbg_delete` to avoid memory leaks) if `dma` is `true`,
+* → Initialised HDRBG object (which must be destroyed using `hdrbg_zero` to avoid memory leaks) if `dma` is `true`,
   else `NULL`.
 
 ---
 
 ```C
-void hdrbg_renew(struct hdrbg_t *hd);
+void hdrbg_reinit(struct hdrbg_t *hd);
 ```
 Reinitialise (reseed) an HDRBG object. If it had not been previously initialised, the behaviour is undefined.
 * `hd` HDRBG object to reinitialise. If `NULL`, the internal HDRBG object will be reinitialised.
@@ -41,7 +41,7 @@ Reinitialise (reseed) an HDRBG object. If it had not been previously initialised
 ---
 
 ```C
-bool hdrbg_gen(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length);
+bool hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length);
 ```
 Generate cryptographically secure pseudorandom bytes using an HDRBG object. If it had not been previously
 initialised/reinitialised, the behaviour is undefined.
@@ -60,7 +60,7 @@ initialised/reinitialised, the behaviour is undefined.
 uint64_t hdrbg_rand(struct hdrbg_t *hd);
 ```
 Generate a cryptographically secure pseudorandom number using an HDRBG object. If it had not been previously
-initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_gen` without prediction
+initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_fill` without prediction
 resistance.
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
 * → Uniform pseudorandom integer in the range 0 (inclusive) to 2<sup>64</sup> − 1 (inclusive).
@@ -104,7 +104,7 @@ result in undefined behaviour) because the representation of floating-point numb
 ---
 
 ```C
-void hdrbg_delete(struct hdrbg_t *hd);
+void hdrbg_zero(struct hdrbg_t *hd);
 ```
-Clear (zero) and/or destroy an HDRBG object.
-* `hd` HDRBG object to clear and destroy. If `NULL`, the internal HDRBG object will be cleared.
+Zero (clear) and/or destroy an HDRBG object.
+* `hd` HDRBG object to zero and destroy. If `NULL`, the internal HDRBG object will be zeroed.

@@ -6,9 +6,9 @@
 
 int main(void)
 {
-    hdrbg_new(false);
+    hdrbg_init(false);
     uint8_t r_bytes[64];
-    hdrbg_gen(NULL, false, r_bytes, 64);
+    hdrbg_fill(NULL, false, r_bytes, 64);
     for(int i = 0; i < 64; ++i)
     {
         printf("%02"PRIx8, r_bytes[i]);
@@ -23,5 +23,5 @@ int main(void)
         printf("%Lf ", hdrbg_real(NULL));
     }
     printf("\n");
-    hdrbg_delete(NULL);
+    hdrbg_zero(NULL);
 }

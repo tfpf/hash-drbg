@@ -26,8 +26,7 @@
  *****************************************************************************/
 int main(void)
 {
-    benchmark(hdrbg_new, 100)
-    benchmark(hdrbg_renew, 100)
-    benchmark(hdrbg_rand, 1000)
-    benchmark(hdrbg_real, 1000)
+    benchmark(hdrbg_init, 100)
+    benchmark(hdrbg_rand, 800)
+    benchmark(hdrbg_real, 800)
 }

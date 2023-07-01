@@ -4,9 +4,9 @@
 
 int main(void)
 {
-    hdrbg_t *hd = hdrbg_new(true);
+    hdrbg_t *hd = hdrbg_init(true);
     std::uint8_t r_bytes[64];
-    hdrbg_gen(hd, false, r_bytes, 64);
+    hdrbg_fill(hd, false, r_bytes, 64);
     for(int i = 0; i < 64; ++i)
     {
         std::printf("%02" PRIx8, r_bytes[i]);
@@ -21,5 +21,5 @@ int main(void)
         std::printf("%Lf ", hdrbg_real(hd));
     }
     std::printf("\n");
-    hdrbg_delete(hd);
+    hdrbg_zero(hd);
 }

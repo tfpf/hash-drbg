@@ -43,7 +43,7 @@ Put the following code in a file `example.c`:
 
 int main(void)
 {
-    hdrbg_new(0);
+    hdrbg_init(0);
     for(int i = 0; i < 10; ++i)
     {
         long long unsigned r = hdrbg_rand(NULL);
