@@ -46,7 +46,8 @@ int main(void)
     hdrbg_new(0);
     for(int i = 0; i < 10; ++i)
     {
-        printf("%llu\n", hdrbg_rand(NULL));
+        long long unsigned r = hdrbg_rand(NULL);
+        printf("%llu\n", r);
     }
 }
 ```
