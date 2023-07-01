@@ -6,22 +6,6 @@
 #include "extras.h"
 
 /******************************************************************************
- * Display the given data in hexadecimal form.
- *
- * @param m_bytes Array of bytes representing the big-endian data to display.
- * @param m_length Numer of bytes to display.
- *****************************************************************************/
-void
-memdump(uint8_t const *m_bytes, size_t m_length)
-{
-    while(m_length-- > 0)
-    {
-        fprintf(stderr, "%02"PRIx8, *m_bytes++);
-    }
-    fprintf(stderr, "\n");
-}
-
-/******************************************************************************
  * Clear memory. Since this file is compiled separately, this function
  * shouldn't be optimised out when called just before freeing the memory.
  *

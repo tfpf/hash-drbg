@@ -114,3 +114,12 @@ void hdrbg_zero(struct hdrbg_t *hd);
 ```
 Zero (clear) and/or destroy an HDRBG object.
 * `hd` HDRBG object to zero and destroy. If `NULL`, the internal HDRBG object will be zeroed.
+
+---
+
+```C
+void hdrbg_dump(uint8_t const *m_bytes, size_t m_length);
+```
+Display the given data in hexadecimal form.
+* `m_bytes` Array of bytes representing the big-endian data to display.
+* `m_length` Number of bytes to display.

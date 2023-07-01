@@ -307,6 +307,19 @@ hdrbg_zero(struct hdrbg_t *hd)
 }
 
 /******************************************************************************
+ * Display the given data in hexadecimal form.
+ *****************************************************************************/
+void
+hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
+{
+    while(m_length-- > 0)
+    {
+        fprintf(stdout, "%02"PRIx8, *m_bytes++);
+    }
+    fprintf(stdout, "\n");
+}
+
+/******************************************************************************
  * Read hexadecimal characters from a stream. Store the bytes of the number
  * they represent in a big-endian array.
  *
