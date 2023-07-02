@@ -1,9 +1,9 @@
-* Elaine Barker and John Kelsey (2015) Recommendation for Random Number Generation Using Deterministic Random Bit
-  Generators. (National Institute of Standards and Technology, Gaithersburg, MD, USA), NIST SP 800-90A, Rev. 1.
-* Elaine Barker (2020) Recommendation for Key Management: Part 1 – General. (National Institute of Standards and
-  Technology, Gaithersburg, MD, USA), NIST SP 800-57 Part 1, Rev. 5.
-* National Institute of Standards and Technology (2015) Secure Hash Standard. (National Institute of Standards and
-  Technology, Gaithersburg, MD, USA), FIPS PUB 180-4.
+* Elaine Barker and John Kelsey (2015) "Recommendation for Random Number Generation Using Deterministic Random Bit
+  Generators". NIST SP 800-90A Rev. 1, doi:10.6028/NIST.SP.800-90Ar1.
+* Elaine Barker (2020) "Recommendation for Key Management: Part 1 – General". NIST SP 800-57 Part 1 Rev. 5,
+  doi:10.6028/NIST.SP.800-57pt1r5.
+* National Institute of Standards and Technology (2015) "Secure Hash Standard". FIPS PUB 180-4,
+  doi:10.6028/NIST.FIPS.180-4.
 
 # Hash DRBG (HDRBG): Cryptographically Secure Pseudorandom Number Generator
 This package provides a cryptographically secure pseudorandom number generator for C and C++. It is mostly compliant
