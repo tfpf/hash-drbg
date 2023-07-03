@@ -100,10 +100,10 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
 
     // Hash repeatedly.
     size_t iterations = (h_length - 1) / HDRBG_OUTPUT_LENGTH + 1;
-    uint8_t tmp[HDRBG_OUTPUT_LENGTH];
     for(size_t i = 1; i <= iterations; ++i)
     {
         m_bytes[0] = i;
+        uint8_t tmp[HDRBG_OUTPUT_LENGTH];
         sha256(m_bytes, m_length, tmp);
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
@@ -132,15 +132,15 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
 
     // Hash repeatedly.
     size_t iterations = (h_length - 1) / HDRBG_OUTPUT_LENGTH + 1;
-    uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-    uint8_t one = 1;
     for(size_t i = 0; i < iterations; ++i)
     {
+        uint8_t tmp[HDRBG_OUTPUT_LENGTH];
         sha256(m_bytes, HDRBG_SEED_LENGTH, tmp);
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
         h_length -= len;
         h_bytes += len;
+        uint8_t one = 1;
         add_accumulate(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
     }
 }
