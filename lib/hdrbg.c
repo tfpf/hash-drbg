@@ -181,6 +181,45 @@ utos(uint64_t ui)
 }
 
 /******************************************************************************
+ * Store bytes in an array in big-endian order.
+ *
+ * @param tv Stream to read hexadecimal characters from. (They will be
+ *     converted into bytes.) If `NULL`, bytes will be read from a random
+ *     device.
+ * @param m_bytes Array to store the bytes in. (It must have sufficient space
+ *     for `m_length` elements.)
+ * @param m_length Number of bytes to store.
+ *
+ * @return Number of bytes stored. Can be different from `m_length` if an error
+ *     occurs.
+ *****************************************************************************/
+static size_t
+streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
+{
+    // During normal operation, this function will be used to obtain entropy.
+    if(tv == NULL)
+    {
+        FILE *rd = fopen("/dev/urandom", "rb");
+        size_t len = fread(m_bytes, sizeof *m_bytes, m_length, rd);
+        fclose(rd);
+        return len;
+    }
+
+    // When running tests, the function will be used to read strings.
+    size_t len;
+    for(len = 0; len < m_length; ++len)
+    {
+        char s[3];
+        if(fscanf(tv, " %2s", s) != 1)
+        {
+            break;
+        }
+        *m_bytes++ = strtol(s, NULL, 16);
+    }
+    return len;
+}
+
+/******************************************************************************
  * Create and/or initialise (seed) an HDRBG object.
  *****************************************************************************/
 struct hdrbg_t *
@@ -189,9 +228,7 @@ hdrbg_init(bool dma)
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
     uint8_t seeder[HDRBG_SECURITY_STRENGTH + 16];
     uint8_t *s_iter = seeder;
-    FILE *rd = fopen("/dev/urandom", "rb");
-    s_iter += fread(s_iter, sizeof *s_iter, HDRBG_SECURITY_STRENGTH, rd);
-    fclose(rd);
+    s_iter += streamtobytes(NULL, s_iter, HDRBG_SECURITY_STRENGTH);
     s_iter += memdecompose(s_iter, 8, time(NULL));
     s_iter += memdecompose(s_iter, 8, seq_num++);
     hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
@@ -207,9 +244,7 @@ hdrbg_reinit(struct hdrbg_t *hd)
     hd = hd == NULL ? &hdrbg : hd;
     uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
     memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-    FILE *rd = fopen("/dev/urandom", "rb");
-    _ = fread(reseeder + 1 + HDRBG_SEED_LENGTH, sizeof *reseeder, HDRBG_SECURITY_STRENGTH, rd);
-    fclose(rd);
+    streamtobytes(NULL, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH);
     hdrbg_seed(hd, reseeder, sizeof reseeder / sizeof *reseeder);
 }
 
@@ -320,29 +355,6 @@ hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
 }
 
 /******************************************************************************
- * Read hexadecimal characters from a stream. Store the bytes of the number
- * they represent in a big-endian array.
- *
- * @param tv Stream to read from.
- * @param m_bytes Array to store the bytes in. (It must have sufficient space
- *     for `m_length` elements.)
- * @param m_length Number of bytes to store.
- *****************************************************************************/
-static void
-streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
-{
-    while(m_length-- > 0)
-    {
-        char s[3];
-        if(fscanf(tv, " %2s", s) != 1)
-        {
-            return;
-        }
-        *m_bytes++ = strtol(s, NULL, 16);
-    }
-}
-
-/******************************************************************************
  * Test a particular HDRBG object for a given prediction resistance setting.
  *
  * @param hd HDRBG object.
@@ -355,11 +367,6 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
     size_t count;
     _ = fscanf(tv, "%zu", &count);
 
-    uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
-    uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
-    uint8_t expected[HDRBG_TV_REQUEST_LENGTH];
-    uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
-
     // The test sequence for no prediction resistance is: initialise,
     // reinitialise, generate and generate. That for prediction resistance is:
     // initialise, generate and generate. A request for prediction resistance
@@ -369,15 +376,18 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
     while(count-- > 0)
     {
         // Initialise.
+        uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
         streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
         hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
 
         // Reinitialise.
+        uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
         memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
         streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
         hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
 
         // Generate.
+        uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
         hdrbg_fill(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
 
         // Reinitialise.
@@ -391,6 +401,7 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         // Generate.
         hdrbg_fill(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
 
+        uint8_t expected[HDRBG_TV_REQUEST_LENGTH];
         streamtobytes(tv, expected, HDRBG_TV_REQUEST_LENGTH);
         assert(memcmp(expected, observed, HDRBG_TV_REQUEST_LENGTH * sizeof *expected) == 0);
     }
