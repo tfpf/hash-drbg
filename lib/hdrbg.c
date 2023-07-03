@@ -207,12 +207,12 @@ struct hdrbg_t *
 hdrbg_init(bool dma)
 {
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
-    uint8_t seeder[HDRBG_SECURITY_STRENGTH + 16];
-    uint8_t *s_iter = seeder;
+    uint8_t seedmaterial[HDRBG_SECURITY_STRENGTH + 16];
+    uint8_t *s_iter = seedmaterial;
     s_iter += streamtobytes(NULL, s_iter, HDRBG_SECURITY_STRENGTH);
     s_iter += memdecompose(s_iter, 8, time(NULL));
     s_iter += memdecompose(s_iter, 8, seq_num++);
-    hdrbg_seed(hd, seeder, sizeof seeder / sizeof *seeder);
+    hdrbg_seed(hd, seedmaterial, sizeof seedmaterial / sizeof *seedmaterial);
     return dma ? hd : NULL;
 }
 
@@ -223,10 +223,10 @@ void
 hdrbg_reinit(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
-    uint8_t reseeder[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
-    memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-    streamtobytes(NULL, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH);
-    hdrbg_seed(hd, reseeder, sizeof reseeder / sizeof *reseeder);
+    uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
+    memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
+    streamtobytes(NULL, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH);
+    hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
 }
 
 /******************************************************************************
@@ -358,15 +358,15 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
     for(int i = 0; i < 60; ++i)
     {
         // Initialise.
-        uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
-        streamtobytes(tv, seeder, HDRBG_TV_SEEDER_LENGTH);
-        hdrbg_seed(hd, seeder, HDRBG_TV_SEEDER_LENGTH);
+        uint8_t seedmaterial[HDRBG_TV_SEEDER_LENGTH];
+        streamtobytes(tv, seedmaterial, HDRBG_TV_SEEDER_LENGTH);
+        hdrbg_seed(hd, seedmaterial, HDRBG_TV_SEEDER_LENGTH);
 
         // Reinitialise.
-        uint8_t reseeder[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
-        memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-        streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
-        hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+        uint8_t reseedmaterial[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
+        memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
+        streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
+        hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDER_LENGTH);
 
         // Generate.
         uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
@@ -375,9 +375,9 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         // Reinitialise.
         if(prediction_resistance)
         {
-            memcpy(reseeder + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseeder);
-            streamtobytes(tv, reseeder + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
-            hdrbg_seed(hd, reseeder, HDRBG_TV_RESEEDER_LENGTH);
+            memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
+            streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
+            hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDER_LENGTH);
         }
 
         // Generate.
