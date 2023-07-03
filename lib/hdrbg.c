@@ -20,15 +20,21 @@ seq_num = 0;
 #include "hdrbg.h"
 #include "sha.h"
 
-#define HDRBG_SECURITY_STRENGTH 32
 #define HDRBG_SEED_LENGTH 55
+#define HDRBG_SECURITY_STRENGTH 32
+#define HDRBG_NONCE1_LENGTH 8
+#define HDRBG_NONCE2_LENGTH 8
+#define HDRBG_SEEDMATERIAL_LENGTH (HDRBG_SECURITY_STRENGTH + HDRBG_NONCE1_LENGTH + HDRBG_NONCE2_LENGTH)
+#define HDRBG_RESEEDMATERIAL_LENGTH (1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH)
 #define HDRBG_OUTPUT_LENGTH 32
-#define HDRBG_REQUEST_LIMIT  (1ULL << 16)
+#define HDRBG_REQUEST_LIMIT (1ULL << 16)
 #define HDRBG_RESEED_INTERVAL (1ULL << 48)
 
 // Characteristics of test vectors.
-#define HDRBG_TV_SEEDER_LENGTH 48
-#define HDRBG_TV_RESEEDER_LENGTH (HDRBG_SEED_LENGTH + 33)
+#define HDRBG_TV_ENTROPY_LENGTH 32
+#define HDRBG_TV_NONCE_LENGTH 16
+#define HDRBG_TV_SEEDMATERIAL_LENGTH (HDRBG_TV_ENTROPY_LENGTH + HDRBG_TV_NONCE_LENGTH)
+#define HDRBG_TV_RESEEDMATERIAL_LENGTH (1 + HDRBG_SEED_LENGTH + HDRBG_TV_ENTROPY_LENGTH)
 #define HDRBG_TV_REQUEST_LENGTH 128
 
 struct hdrbg_t
@@ -207,11 +213,11 @@ struct hdrbg_t *
 hdrbg_init(bool dma)
 {
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
-    uint8_t seedmaterial[HDRBG_SECURITY_STRENGTH + 16];
+    uint8_t seedmaterial[HDRBG_SEEDMATERIAL_LENGTH];
     uint8_t *s_iter = seedmaterial;
     s_iter += streamtobytes(NULL, s_iter, HDRBG_SECURITY_STRENGTH);
-    s_iter += memdecompose(s_iter, 8, time(NULL));
-    s_iter += memdecompose(s_iter, 8, seq_num++);
+    s_iter += memdecompose(s_iter, HDRBG_NONCE1_LENGTH, time(NULL));
+    s_iter += memdecompose(s_iter, HDRBG_NONCE2_LENGTH, seq_num++);
     hdrbg_seed(hd, seedmaterial, sizeof seedmaterial / sizeof *seedmaterial);
     return dma ? hd : NULL;
 }
@@ -223,7 +229,7 @@ void
 hdrbg_reinit(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
-    uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
+    uint8_t reseedmaterial[HDRBG_RESEEDMATERIAL_LENGTH] = {0x01U};
     memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
     streamtobytes(NULL, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH);
     hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
@@ -358,15 +364,15 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
     for(int i = 0; i < 60; ++i)
     {
         // Initialise.
-        uint8_t seedmaterial[HDRBG_TV_SEEDER_LENGTH];
-        streamtobytes(tv, seedmaterial, HDRBG_TV_SEEDER_LENGTH);
-        hdrbg_seed(hd, seedmaterial, HDRBG_TV_SEEDER_LENGTH);
+        uint8_t seedmaterial[HDRBG_TV_SEEDMATERIAL_LENGTH];
+        streamtobytes(tv, seedmaterial, HDRBG_TV_SEEDMATERIAL_LENGTH);
+        hdrbg_seed(hd, seedmaterial, HDRBG_TV_SEEDMATERIAL_LENGTH);
 
         // Reinitialise.
-        uint8_t reseedmaterial[HDRBG_TV_RESEEDER_LENGTH] = {0x01U};
+        uint8_t reseedmaterial[HDRBG_TV_RESEEDMATERIAL_LENGTH] = {0x01U};
         memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
-        streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
-        hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDER_LENGTH);
+        streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_ENTROPY_LENGTH);
+        hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDMATERIAL_LENGTH);
 
         // Generate.
         uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
@@ -376,8 +382,8 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         if(prediction_resistance)
         {
             memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
-            streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_RESEEDER_LENGTH - HDRBG_SEED_LENGTH - 1);
-            hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDER_LENGTH);
+            streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_ENTROPY_LENGTH);
+            hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDMATERIAL_LENGTH);
         }
 
         // Generate.
