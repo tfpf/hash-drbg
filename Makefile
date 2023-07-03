@@ -1,5 +1,4 @@
 CFLAGS = -std=c17 -O2 -Wall -Wextra -I./include -fPIC -fstrict-aliasing
-CP = cp
 
 Prefix = /usr
 Package = hdrbg
@@ -16,18 +15,21 @@ Library = ./lib/$(Package).so
 LibraryDestination = $(Prefix)/lib/lib$(Package).so
 endif
 
-.PHONY: install uninstall
+.PHONY: install uninstall tests
 
 install: uninstall $(Library)
-	$(CP) $(Header) $(HeaderDestination)
-	$(CP) $(Library) $(LibraryDestination)
+	cp $(Header) $(HeaderDestination)
+	cp $(Library) $(LibraryDestination)
 	if [ -n "$(LibraryDestinationWindows)" ];  \
 	then  \
-	    $(CP) $(Library) $(LibraryDestinationWindows);  \
+	    cp $(Library) $(LibraryDestinationWindows);  \
 	fi
 
 uninstall:
 	$(RM) $(HeaderDestination) $(LibraryDestination) $(LibraryDestinationWindows)
+
+tests:
+	cd tests; make; ./tests
 
 $(Library): $(Objects)
 	$(CC) $(CFLAGS) -shared -o $@ $^
