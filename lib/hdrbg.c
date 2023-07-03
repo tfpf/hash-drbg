@@ -40,10 +40,6 @@ struct hdrbg_t
     uint64_t gen_count;
 };
 
-// To suppress warnings about unused return values when I know what I am doing.
-static int unsigned
-_;
-
 static struct hdrbg_t
 hdrbg;
 
@@ -181,11 +177,10 @@ utos(uint64_t ui)
 }
 
 /******************************************************************************
- * Store bytes in an array in big-endian order.
+ * Read bytes from a stream and store them in an array.
  *
- * @param tv Stream to read hexadecimal characters from. (They will be
- *     converted into bytes.) If `NULL`, bytes will be read from a random
- *     device.
+ * @param fptr_ Stream to read bytes from. If `NULL`, a random device will be
+ *     opened to read bytes, and then closed.
  * @param m_bytes Array to store the bytes in. (It must have sufficient space
  *     for `m_length` elements.)
  * @param m_length Number of bytes to store.
@@ -194,27 +189,13 @@ utos(uint64_t ui)
  *     occurs.
  *****************************************************************************/
 static size_t
-streamtobytes(FILE *tv, uint8_t *m_bytes, size_t m_length)
+streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
 {
-    // During normal operation, this function will be used to obtain entropy.
-    if(tv == NULL)
+    FILE *fptr = fptr_ == NULL ? fopen("/dev/urandom", "rb") : fptr_;
+    size_t len = fread(m_bytes, sizeof *m_bytes, m_length, fptr);
+    if(fptr_ == NULL)
     {
-        FILE *rd = fopen("/dev/urandom", "rb");
-        size_t len = fread(m_bytes, sizeof *m_bytes, m_length, rd);
-        fclose(rd);
-        return len;
-    }
-
-    // When running tests, the function will be used to read strings.
-    size_t len;
-    for(len = 0; len < m_length; ++len)
-    {
-        char s[3];
-        if(fscanf(tv, " %2s", s) != 1)
-        {
-            break;
-        }
-        *m_bytes++ = strtol(s, NULL, 16);
+        fclose(fptr);
     }
     return len;
 }
@@ -364,16 +345,15 @@ hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
 static void
 hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 {
-    size_t count;
-    _ = fscanf(tv, "%zu", &count);
-
     // The test sequence for no prediction resistance is: initialise,
     // reinitialise, generate and generate. That for prediction resistance is:
     // initialise, generate and generate. A request for prediction resistance
     // means that the HDRBG object should be reinitialised before generation,
     // so the latter sequence is equivalent to: initialise, reinitialise,
-    // generate, reinitialise and generate without prediction resistance.
-    while(count-- > 0)
+    // generate, reinitialise and generate without prediction resistance. There
+    // are a total of 60 tests without prediction resistance and 60 tests with
+    // prediction resistance.
+    for(int i = 0; i < 60; ++i)
     {
         // Initialise.
         uint8_t seeder[HDRBG_TV_SEEDER_LENGTH];
@@ -439,7 +419,7 @@ void
 hdrbg_test(void)
 {
     printf("Testing the internal HDRBG object.\n");
-    FILE *tv = fopen("Hash_DRBG.txt", "r");
+    FILE *tv = fopen("Hash_DRBG.dat", "rb");
     hdrbg_test_obj(&hdrbg, tv);
     printf("All tests passed.\n");
 
