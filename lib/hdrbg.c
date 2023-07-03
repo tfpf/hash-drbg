@@ -338,6 +338,16 @@ hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
 /******************************************************************************
  * Test a particular HDRBG object for a given prediction resistance setting.
  *
+ * The test sequence for no prediction resistance is: initialise, reinitialise,
+ * generate and generate. That for prediction resistance is: initialise,
+ * generate and generate. A request for prediction resistance means that the
+ * HDRBG object should be reinitialised before generation, so the latter
+ * sequence is equivalent to: initialise, reinitialise, generate, reinitialise
+ * and generate without prediction resistance.
+ *
+ * There are a total of 60 tests without prediction resistance and 60 tests
+ * with prediction resistance.
+ *
  * @param hd HDRBG object.
  * @param prediction_resistance Prediction resistance.
  * @param tv Test vectors file.
@@ -345,14 +355,6 @@ hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
 static void
 hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 {
-    // The test sequence for no prediction resistance is: initialise,
-    // reinitialise, generate and generate. That for prediction resistance is:
-    // initialise, generate and generate. A request for prediction resistance
-    // means that the HDRBG object should be reinitialised before generation,
-    // so the latter sequence is equivalent to: initialise, reinitialise,
-    // generate, reinitialise and generate without prediction resistance. There
-    // are a total of 60 tests without prediction resistance and 60 tests with
-    // prediction resistance.
     for(int i = 0; i < 60; ++i)
     {
         // Initialise.
