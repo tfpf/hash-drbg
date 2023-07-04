@@ -1,4 +1,5 @@
 CFLAGS = -std=c17 -O2 -Wall -Wextra -I./include -fPIC -fstrict-aliasing
+LDFLAGS = -shared
 
 Prefix = /usr
 Package = hdrbg
@@ -32,4 +33,4 @@ tests:
 	cd tests; make; ./tests
 
 $(Library): $(Objects)
-	$(CC) $(CFLAGS) -shared -o $@ $^
+	$(LINK.c) -o $@ $^
