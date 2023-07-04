@@ -8,6 +8,10 @@
 #include <string.h>
 #include <time.h>
 
+#include "extras.h"
+#include "hdrbg.h"
+#include "sha.h"
+
 #ifndef __STDC_NO_ATOMICS__
 #include <stdatomic.h>
 static atomic_ullong
@@ -16,9 +20,13 @@ static int long long unsigned
 #endif
 seq_num = 0;
 
-#include "extras.h"
-#include "hdrbg.h"
-#include "sha.h"
+#ifndef __STDC_NO_THREADS__
+#include <threads.h>
+static thread_local enum hdrbg_err_t
+#else
+static enum hdrbg_err_t
+#endif
+hdrbg_err = HDRBG_ERR_NONE;
 
 #define HDRBG_SEED_LENGTH 55
 #define HDRBG_SECURITY_STRENGTH 32
@@ -45,9 +53,19 @@ struct hdrbg_t
     uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
 };
-
 static struct hdrbg_t
 hdrbg;
+
+/******************************************************************************
+ * Obtain the error status.
+ *****************************************************************************/
+enum hdrbg_err_t
+hdrbg_err_get(void)
+{
+    enum hdrbg_err_t err = hdrbg_err;
+    hdrbg_err = HDRBG_ERR_NONE;
+    return err;
+}
 
 /******************************************************************************
  * Add two numbers. Overwrite the first number with the result, disregarding

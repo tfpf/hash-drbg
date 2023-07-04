@@ -14,11 +14,17 @@
 #endif
 
 struct hdrbg_t;
+enum hdrbg_err_t
+{
+    HDRBG_ERR_NONE,
+    HDRBG_ERR_OUT_OF_MEMORY,
+};
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+enum hdrbg_err_t hdrbg_err_get(void);
 struct hdrbg_t *hdrbg_init(bool dma);
 void hdrbg_reinit(struct hdrbg_t *hd);
 bool hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length);
