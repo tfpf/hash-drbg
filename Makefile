@@ -30,7 +30,7 @@ uninstall:
 	$(RM) $(HeaderDestination) $(LibraryDestination) $(LibraryDestinationWindows)
 
 tests:
-	cd tests; make; ./tests
+	cd tests && make && ./tests
 
 $(Library): $(Objects)
 	$(LINK.c) -o $@ $^
