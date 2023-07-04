@@ -37,7 +37,7 @@ The type of the error indicator. It can take the following values.
 
 # Functions
 ```C
-hdrbg_err_t hdrbg_err_get(void);
+enum hdrbg_err_t hdrbg_err_get(void);
 ```
 Obtain the error indicator (which is a global variable similar to `errno`, but cannot be accessed directly). If the
 compiler supports standard threads, a separate error indicator is maintained for each thread.
