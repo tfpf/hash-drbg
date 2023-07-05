@@ -49,11 +49,12 @@ Calling this function clears the error indicator. For instance, if it is called 
 may return `HDRBG_ERR_OUT_OF_MEMORY`, but the second call will return `HDRBG_ERR_NONE`.
 
 In theory, each of the below functions can error out, so a call to each of them should be followed by a call to this
-function to check for errors. Any error (other than `HDRBG_ERR_INVALID_REQUEST`) leaves the pseudorandom number
-generator in an intermediate state, making it cryptographically insecure for further use.
+function to check for errors (and disambiguate the return value). Assume that any error other than
+`HDRBG_ERR_INVALID_REQUEST` leaves the pseudorandom number generator in an intermediate state, making it
+cryptographically insecure for further use.
 
-In practice, on a modern system with loads of memory, `HDRBG_ERR_INVALID_REQUEST` is the only error which you can
-realistically expect.
+In practice, on a modern system with loads of memory and entropy, `HDRBG_ERR_INVALID_REQUEST` is the only error which
+you can realistically expect.
 
 * → Error indicator.
 
@@ -78,7 +79,9 @@ struct hdrbg_t *hdrbg_reinit(struct hdrbg_t *hd);
 ```
 Reinitialise (reseed) an HDRBG object. If it had not been previously initialised, the behaviour is undefined.
 * `hd` HDRBG object to reinitialise. If `NULL`, the internal HDRBG object will be reinitialised.
-* → `hd`.
+* →
+  * On success: `hd`.
+  * On failure: `NULL`.
 
 ---
 
@@ -104,7 +107,9 @@ Generate a cryptographically secure pseudorandom number using an HDRBG object. I
 initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_fill` without prediction
 resistance.
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
-* → Uniform pseudorandom integer in the range 0 (inclusive) to 2<sup>64</sup> − 1 (inclusive).
+* →
+  * On success: uniform pseudorandom integer in the range 0 (inclusive) to 2<sup>64</sup> − 1 (inclusive).
+  * On failure: `(uint64_t)-1`.
 
 ---
 
@@ -114,8 +119,10 @@ uint64_t hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus);
 Generate a cryptographically secure pseudorandom residue using an HDRBG object. If it had not been previously
 initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_rand`.
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
-* `modulus` Positive integer.
-* → Uniform pseudorandom integer in the range 0 (inclusive) to `modulus` (exclusive).
+* `modulus` Right end of the interval. Must be positive.
+* →
+  * On success: uniform pseudorandom integer in the range 0 (inclusive) to `modulus` (exclusive).
+  * On failure: `(uint64_t)-1`.
 
 ---
 
@@ -127,7 +134,9 @@ initialised/reinitialised, the behaviour is undefined. This function internally 
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
 * `left` Left end of the interval.
 * `right` Right end of the interval. Must be greater than `left`.
-* → Uniform pseudorandom integer in the range `left` (inclusive) to `right` (exclusive).
+* →
+  * On success: uniform pseudorandom integer in the range `left` (inclusive) to `right` (exclusive).
+  * On failure: −1.
 
 ---
 
@@ -137,7 +146,9 @@ double long hdrbg_real(struct hdrbg_t *hd);
 Generate a cryptographically secure pseudorandom fraction using an HDRBG object. If it had not been previously
 initialised/reinitialised, the behaviour is undefined. This function internally uses `hdrbg_rand`.
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
-* → Uniform pseudorandom real in the range 0 (inclusive) to 1 (inclusive).
+* →
+  * On success: uniform pseudorandom real in the range 0 (inclusive) to 1 (inclusive).
+  * On failure: −1.
 
 ---
 
