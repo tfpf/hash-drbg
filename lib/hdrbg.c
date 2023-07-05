@@ -105,13 +105,21 @@ add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t
  * @param h_bytes Array to store the output bytes in. (It must have sufficient
  *     space for `h_length` elements.)
  * @param h_length Number of output bytes required.
+ *
+ * @return On success: 0. On failure: -1.
  *****************************************************************************/
-static void
+static int
 hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_length)
 {
+    int status = 0;
+
     // Construct the data to be hashed.
     size_t m_length = 5 + m_length_;
     uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
+    if(m_bytes == NULL)
+    {
+        return -1;
+    }
     uint32_t nbits = (uint32_t)h_length << 3;
     memdecompose(m_bytes + 1, 4, nbits);
     memcpy(m_bytes + 5, m_bytes_, m_length_ * sizeof *m_bytes_);
@@ -122,14 +130,21 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
     {
         m_bytes[0] = i;
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-        sha256(m_bytes, m_length, tmp);
+        if(sha256(m_bytes, m_length, tmp) == NULL)
+        {
+            status = -1;
+            goto cleanup_m_bytes;
+        }
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
         h_length -= len;
         h_bytes += len;
     }
+
+cleanup_m_bytes:
     memclear(m_bytes, m_length * sizeof *m_bytes);
     free(m_bytes);
+    return status;
 }
 
 /******************************************************************************
@@ -140,8 +155,10 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
  * @param h_bytes Array to store the output bytes in. (It must have sufficient
  *     space for `h_length` elements.)
  * @param h_length Number of output bytes required.
+ *
+ * @return On success: 0. On failure: -1.
  *****************************************************************************/
-static void
+static int
 hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
 {
     // Construct the data to be hashed.
@@ -153,7 +170,10 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
     for(size_t i = 0; i < iterations; ++i)
     {
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-        sha256(m_bytes, HDRBG_SEED_LENGTH, tmp);
+        if(sha256(m_bytes, HDRBG_SEED_LENGTH, tmp) == NULL)
+        {
+            return -1;
+        }
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
         h_length -= len;
@@ -161,6 +181,7 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
         uint8_t one = 1;
         add_accumulate(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
     }
+    return 0;
 }
 
 /******************************************************************************
@@ -209,13 +230,16 @@ utos(uint64_t ui)
  *     for `m_length` elements.)
  * @param m_length Number of bytes to store.
  *
- * @return Number of bytes stored. Can be different from `m_length` if an error
- *     occurs.
+ * @return Number of bytes stored.
  *****************************************************************************/
 static size_t
 streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
 {
     FILE *fptr = fptr_ == NULL ? fopen("/dev/urandom", "rb") : fptr_;
+    if(fptr == NULL)
+    {
+        return 0;
+    }
     size_t len = fread(m_bytes, sizeof *m_bytes, m_length, fptr);
     if(fptr_ == NULL)
     {
@@ -231,6 +255,10 @@ struct hdrbg_t *
 hdrbg_init(bool dma)
 {
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
+    if(hd == NULL)
+    {
+        return NULL;
+    }
     uint8_t seedmaterial[HDRBG_SEEDMATERIAL_LENGTH];
     uint8_t *s_iter = seedmaterial;
     s_iter += streamtobytes(NULL, s_iter, HDRBG_SECURITY_STRENGTH);
@@ -243,7 +271,7 @@ hdrbg_init(bool dma)
 /******************************************************************************
  * Reinitialise (reseed) an HDRBG object.
  *****************************************************************************/
-void
+struct hdrbg_t *
 hdrbg_reinit(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
@@ -251,17 +279,18 @@ hdrbg_reinit(struct hdrbg_t *hd)
     memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
     streamtobytes(NULL, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH);
     hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
+    return hd;
 }
 
 /******************************************************************************
  * Generate cryptographically secure pseudorandom bytes.
  *****************************************************************************/
-bool
+size_t
 hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
 {
     if(r_length > HDRBG_REQUEST_LIMIT)
     {
-        return false;
+        return 0;
     }
     hd = hd == NULL ? &hdrbg : hd;
     if(prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
@@ -273,13 +302,16 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
     // Mutate the state.
     hd->V[0] = 0x03U;
     uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-    sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp);
+    if(sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp) == NULL)
+    {
+        return r_length;
+    }
     uint8_t gen_count[8];
     memdecompose(gen_count, 8, ++hd->gen_count);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, tmp, HDRBG_OUTPUT_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
-    return true;
+    return r_length;
 }
 
 /******************************************************************************
