@@ -42,7 +42,8 @@ sha256_bytes[32];
  *     (It must have sufficient space for 32 elements.) If `NULL`, the hash
  *     will be stored in a static array.
  *
- * @return Array of bytes representing the big-endian hash of the data.
+ * @return On success: array of bytes representing the big-endian hash of the
+ *     data. On failure: `NULL`.
  *****************************************************************************/
 uint8_t *
 sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
@@ -57,6 +58,10 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     size_t zeros = 512 - ((nbits + 65) & 511U);
     size_t m_length = m_length_ + ((1 + zeros) >> 3) + 8;
     uint8_t *m_bytes = calloc(m_length, sizeof *m_bytes);
+    if(m_bytes == NULL)
+    {
+        return NULL;
+    }
     memcpy(m_bytes, m_bytes_, m_length_ * sizeof *m_bytes_);
     m_bytes[m_length_] = 0x80U;
     memdecompose(m_bytes + m_length - 8, 8, nbits);
