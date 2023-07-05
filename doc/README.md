@@ -34,6 +34,9 @@ enum hdrbg_err_t;
 The type of the error indicator. It can take the following values.
 * `HDRBG_ERR_NONE` No error.
 * `HDRBG_ERR_OUT_OF_MEMORY` Dynamic memory allocation failed.
+* `HDRBG_ERR_NO_ENTROPY` No entropy could be obtained from `/dev/urandom`.
+* `HDRBG_ERR_INSUFFICIENT_ENTROPY` Insufficient entropy was obtained from `/dev/urandom`.
+* `HDRBG_ERR_INVALID_REQUEST` The `r_length` argument of a call to `hdrbg_fill` was greater than 65536.
 
 # Functions
 ```C
@@ -44,6 +47,13 @@ compiler supports standard threads, a separate error indicator is maintained for
 
 Calling this function clears the error indicator. For instance, if it is called twice in succession, the first call
 may return `HDRBG_ERR_OUT_OF_MEMORY`, but the second call will return `HDRBG_ERR_NONE`.
+
+In theory, each of the below functions can error out, so a call to each of them should be followed by a call to this
+function to check for errors. Any error (other than `HDRBG_ERR_INVALID_REQUEST`) leaves the pseudorandom number
+generator in an intermediate state, making it cryptographically insecure for further use.
+
+In practice, on a modern system with loads of memory, `HDRBG_ERR_INVALID_REQUEST` is the only error which you can
+realistically expect.
 
 * → Error indicator.
 

@@ -18,6 +18,9 @@ enum hdrbg_err_t
 {
     HDRBG_ERR_NONE,
     HDRBG_ERR_OUT_OF_MEMORY,
+    HDRBG_ERR_NO_ENTROPY,
+    HDRBG_ERR_INSUFFICIENT_ENTROPY,
+    HDRBG_ERR_INVALID_REQUEST,
 };
 
 #ifdef __cplusplus

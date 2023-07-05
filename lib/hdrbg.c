@@ -118,6 +118,7 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
     uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
     if(m_bytes == NULL)
     {
+        hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
         return -1;
     }
     uint32_t nbits = (uint32_t)h_length << 3;
@@ -132,6 +133,7 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
         if(sha256(m_bytes, m_length, tmp) == NULL)
         {
+            hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
             status = -1;
             goto cleanup_m_bytes;
         }
@@ -172,6 +174,7 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
         if(sha256(m_bytes, HDRBG_SEED_LENGTH, tmp) == NULL)
         {
+            hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
             return -1;
         }
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
@@ -238,9 +241,14 @@ streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
     FILE *fptr = fptr_ == NULL ? fopen("/dev/urandom", "rb") : fptr_;
     if(fptr == NULL)
     {
+        hdrbg_err = HDRBG_ERR_NO_ENTROPY;
         return 0;
     }
     size_t len = fread(m_bytes, sizeof *m_bytes, m_length, fptr);
+    if(len < m_length)
+    {
+        hdrbg_err = HDRBG_ERR_INSUFFICIENT_ENTROPY;
+    }
     if(fptr_ == NULL)
     {
         fclose(fptr);
@@ -257,6 +265,7 @@ hdrbg_init(bool dma)
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
     if(hd == NULL)
     {
+        hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
         return NULL;
     }
     uint8_t seedmaterial[HDRBG_SEEDMATERIAL_LENGTH];
@@ -290,6 +299,7 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
 {
     if(r_length > HDRBG_REQUEST_LIMIT)
     {
+        hdrbg_err = HDRBG_ERR_INVALID_REQUEST;
         return 0;
     }
     hd = hd == NULL ? &hdrbg : hd;
@@ -304,6 +314,7 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
     uint8_t tmp[HDRBG_OUTPUT_LENGTH];
     if(sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp) == NULL)
     {
+        hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
         return r_length;
     }
     uint8_t gen_count[8];
