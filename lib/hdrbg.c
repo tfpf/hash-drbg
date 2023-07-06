@@ -230,7 +230,7 @@ utos(uint64_t ui)
         return ui;
     }
     int64_t si = ui - 0x8000000000000000U;
-    return si - (int64_t)0x8000000000000000;
+    return si - 0x7FFFFFFFFFFFFFFFLL - 1;
 }
 
 /******************************************************************************
@@ -288,13 +288,10 @@ hdrbg_init(bool dma)
     {
         goto cleanup_hd;
     }
-    return dma ? hd : NULL;
+    return hd;
 
 cleanup_hd:
-    if(hd != &hdrbg)
-    {
-        free(hd);
-    }
+    hdrbg_zero(hd);
     return NULL;
 }
 
@@ -340,9 +337,12 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
         }
     }
     retval = hash_gen(hd->V + 1, r_bytes, r_length);
+    if(retval < r_length)
+    {
+        return retval;
+    }
 
-    // It is safe to attempt to mutate the state even if the previous function
-    // failed.
+    // Mutate the state.
     hd->V[0] = 0x03U;
     uint8_t tmp[HDRBG_OUTPUT_LENGTH];
     if(sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp) == NULL)
@@ -429,7 +429,7 @@ hdrbg_real(struct hdrbg_t *hd)
 void
 hdrbg_zero(struct hdrbg_t *hd)
 {
-    if(hd == NULL)
+    if(hd == NULL || hd == &hdrbg)
     {
         memclear(&hdrbg, sizeof hdrbg);
         return;

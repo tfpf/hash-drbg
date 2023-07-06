@@ -48,6 +48,8 @@ compiler supports standard threads, a separate error indicator is maintained for
 Calling this function clears the error indicator. For instance, if it is called twice in succession, the first call
 may return `HDRBG_ERR_OUT_OF_MEMORY`, but the second call will return `HDRBG_ERR_NONE`.
 
+* → Error indicator.
+
 In theory, each of the below functions can error out, so a call to each of them should be followed by a call to this
 function to check for errors (and disambiguate the return value). Assume that any error other than
 `HDRBG_ERR_INVALID_REQUEST` leaves the pseudorandom number generator in an intermediate state, making it
@@ -55,8 +57,6 @@ cryptographically insecure for further use.
 
 In practice, on a modern system with loads of memory and entropy, `HDRBG_ERR_INVALID_REQUEST` is the only error which
 you can realistically expect.
-
-* → Error indicator.
 
 ---
 
@@ -67,10 +67,11 @@ Create and/or initialise (seed) an HDRBG object.
 * `dma` Whether to use dynamic memory allocation. If `true`, an HDRBG object will be allocated dynamically and
   initialised. If `false`, the internal HDRBG object will be initialised.
 * →
-  * On success:
-    * if `dma` is `true`: initialised HDRBG object (which must be destroyed using `hdrbg_zero` to avoid memory leaks).
-    * if `dma` is `false`: `NULL`.
+  * On success: initialised HDRBG object.
   * On failure: `NULL`.
+
+If `dma` is `true` and this function succeeds, the returned HDRBG object must be destroyed using `hdrbg_zero` to avoid
+memory leaks.
 
 ---
 
@@ -109,7 +110,7 @@ resistance.
 * `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
 * →
   * On success: uniform pseudorandom integer in the range 0 (inclusive) to 2<sup>64</sup> − 1 (inclusive).
-  * On failure: `(uint64_t)-1`.
+  * On failure: 2<sup>64</sup> − 1.
 
 ---
 
@@ -122,7 +123,7 @@ initialised/reinitialised, the behaviour is undefined. This function internally 
 * `modulus` Right end of the interval. Must be positive.
 * →
   * On success: uniform pseudorandom integer in the range 0 (inclusive) to `modulus` (exclusive).
-  * On failure: `(uint64_t)-1`.
+  * On failure: 2<sup>64</sup> − 1.
 
 ---
 
