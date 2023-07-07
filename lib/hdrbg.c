@@ -337,17 +337,62 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
 }
 
 /******************************************************************************
- * Generate a cryptographically secure pseudorandom number.
+ * Helper for `hdrbg_rand`.
+ *
+ * @param hd
+ * @param r
+ *
+ * @return On success: 0. On failure: -1.
  *****************************************************************************/
-uint64_t
-hdrbg_rand(struct hdrbg_t *hd)
+static int
+hdrbg_rand_(struct hdrbg_t *hd, uint64_t *r)
 {
     uint8_t value[8];
     if(hdrbg_fill(hd, false, value, 8) < 8)
     {
         return -1;
     }
-    return memcompose(value, 8);
+    *r = memcompose(value, 8);
+    return 0;
+}
+
+/******************************************************************************
+ * Generate a cryptographically secure pseudorandom number.
+ *****************************************************************************/
+uint64_t
+hdrbg_rand(struct hdrbg_t *hd)
+{
+    uint64_t r;
+    if(hdrbg_rand_(hd, &r) == -1)
+    {
+        return -1;
+    }
+    return r;
+}
+
+/******************************************************************************
+ * Helper for `hdrbg_uint`.
+ *
+ * @param hd
+ * @param modulus
+ * @param r
+ *
+ * @return On success: 0. On failure: -1.
+ *****************************************************************************/
+static int
+hdrbg_uint_(struct hdrbg_t *hd, uint64_t modulus, uint64_t *r)
+{
+    uint64_t upper = 0xFFFFFFFFFFFFFFFFU - 0xFFFFFFFFFFFFFFFFU % modulus;
+    do
+    {
+        if(hdrbg_rand_(hd, r) == -1)
+        {
+            return -1;
+        }
+    }
+    while(*r >= upper);
+    *r %= modulus;
+    return 0;
 }
 
 /******************************************************************************
@@ -356,18 +401,12 @@ hdrbg_rand(struct hdrbg_t *hd)
 uint64_t
 hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus)
 {
-    uint64_t upper = 0xFFFFFFFFFFFFFFFFU - 0xFFFFFFFFFFFFFFFFU % modulus;
     uint64_t r;
-    do
+    if(hdrbg_uint_(hd, modulus, &r) == -1)
     {
-        r = hdrbg_rand(hd);
-        if(r == (uint64_t)-1 && hdrbg_err != HDRBG_ERR_NONE)
-        {
-            return -1;
-        }
+        return -1;
     }
-    while(r >= upper);
-    return r % modulus;
+    return r;
 }
 
 /******************************************************************************
@@ -379,8 +418,8 @@ hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
     uint64_t uleft = left;
     uint64_t uright = right;
     uint64_t modulus = uright - uleft;
-    uint64_t r = hdrbg_uint(hd, modulus);
-    if(r == (uint64_t)-1 && hdrbg_err != HDRBG_ERR_NONE)
+    uint64_t r;
+    if(hdrbg_uint_(hd, modulus, &r) == -1)
     {
         return -1;
     }
@@ -400,8 +439,8 @@ hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
 double long
 hdrbg_real(struct hdrbg_t *hd)
 {
-    uint64_t r = hdrbg_rand(hd);
-    if(r == (uint64_t)-1 && hdrbg_err != HDRBG_ERR_NONE)
+    uint64_t r;
+    if(hdrbg_rand_(hd, &r) == -1)
     {
         return -1.0L;
     }
