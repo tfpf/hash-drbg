@@ -5,7 +5,7 @@
 * National Institute of Standards and Technology (2015) "Secure Hash Standard". FIPS PUB 180-4,
   doi:10.6028/NIST.FIPS.180-4.
 
-# Hash DRBG (HDRBG): Cryptographically Secure Pseudorandom Number Generator
+# Hash Deterministic Random Bit Generator (HDRBG): Cryptographically Secure Pseudorandom Number Generator
 This package provides a cryptographically secure pseudorandom number generator for C and C++. It is mostly compliant
 with the specification given in NIST SP 800-90A.
 
