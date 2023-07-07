@@ -81,17 +81,16 @@ static void
 add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t b_length)
 {
     int unsigned carry = 0;
-    size_t ai = a_length, bi = b_length;
-    for(; ai > 0 && bi > 0; --ai, --bi)
+    for(; a_length > 0 && b_length > 0; --a_length, --b_length)
     {
-        carry = a_bytes[ai - 1] + carry + b_bytes[bi - 1];
-        a_bytes[ai - 1] = carry;
+        carry = a_bytes[a_length - 1] + carry + b_bytes[b_length - 1];
+        a_bytes[a_length - 1] = carry;
         carry >>= 8;
     }
-    for(; ai > 0; --ai)
+    for(; a_length > 0; --a_length)
     {
-        carry += a_bytes[ai - 1];
-        a_bytes[ai - 1] = carry;
+        carry += a_bytes[a_length - 1];
+        a_bytes[a_length - 1] = carry;
         carry >>= 8;
     }
 }
