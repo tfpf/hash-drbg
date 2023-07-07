@@ -213,27 +213,6 @@ hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
 }
 
 /******************************************************************************
- * Convert an unsigned integer into a signed integer in a safe manner.
- * (According to the C standard, implicit conversion of an unsigned integer
- * into a signed integer when the type of the latter cannot represent the value
- * of the former results in implementation-defined behaviour.)
- *
- * @param ui Unsigned integer.
- *
- * @return Signed integer with value congruent to `ui` modulo 2 ** 64.
- *****************************************************************************/
-static int64_t
-utos(uint64_t ui)
-{
-    if(ui <= 0x7FFFFFFFFFFFFFFFU)
-    {
-        return ui;
-    }
-    int64_t si = ui - 0x8000000000000000U;
-    return si - 0x7FFFFFFFFFFFFFFFLL - 1;
-}
-
-/******************************************************************************
  * Read bytes from a stream and store them in an array.
  *
  * @param fptr_ Stream to read bytes from. If `NULL`, a random device will be
@@ -406,7 +385,14 @@ hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
     {
         return -1;
     }
-    return utos(r + uleft);
+    r += uleft;
+
+    // According to the C standard, implicit conversion of an unsigned integer
+    // into a signed integer when the type of the latter cannot represent the
+    // value of the former results in implementation-defined behaviour. Hence,
+    // type-pun the value, exploiting the fact that fixed-width integers use
+    // two's complement representation.
+    return *(int64_t *)&r;
 }
 
 /******************************************************************************
@@ -469,7 +455,7 @@ hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
  * @param tv Test vectors file.
  *****************************************************************************/
 static void
-hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
+hdrbg_tests_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 {
     for(int i = 0; i < 60; ++i)
     {
@@ -506,51 +492,20 @@ hdrbg_test_obj_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 }
 
 /******************************************************************************
- * Test a particular HDRBG object.
+ * Verify that the implementation works as specified. This function is meant
+ * for testing purposes only; using it outside the test environment may result
+ * in undefined behaviour.
  *
- * @param hd HDRBG object.
- * @param tv Test vectors file.
- *****************************************************************************/
-static void
-hdrbg_test_obj(struct hdrbg_t *hd, FILE *tv)
-{
-    hdrbg_test_obj_pr(hd, false, tv);
-    hdrbg_test_obj_pr(hd, true, tv);
-
-    for(int i = 0; i < 30000; ++i)
-    {
-        int64_t left = utos(hdrbg_rand(hd));
-        int64_t right = utos(hdrbg_rand(hd));
-        if(left < right)
-        {
-            int64_t middle = hdrbg_span(hd, left, right);
-            assert(left <= middle && middle < right);
-        }
-    }
-
-    size_t r_length = hdrbg_fill(hd, false, NULL, 65537ULL);
-    assert(r_length == 0);
-    assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST);
-}
-
-/******************************************************************************
- * Verify that the cryptographically secure pseudorandom number generator is
- * working as specified. This function is meant for testing purposes only;
- * using it outside the test environment may result in undefined behaviour.
+ * @param hd HDRBG object to use. If `NULL`, the internal HDRBG object will be
+ *     used.
+ * @param tv Test vectors file. This is of type `void *` rather than `FILE *`
+ *     because I didn't want to include another C header in the header of this
+ *     library.
  *****************************************************************************/
 void
-hdrbg_test(void)
+hdrbg_tests(struct hdrbg_t *hd, void *tv)
 {
-    printf("Testing the internal HDRBG object.\n");
-    FILE *tv = fopen("Hash_DRBG.dat", "rb");
-    hdrbg_test_obj(&hdrbg, tv);
-    printf("All tests passed.\n");
-
-    printf("Testing a dynamically-allocated HDRBG object.\n");
-    rewind(tv);
-    struct hdrbg_t *hd = malloc(sizeof *hd);
-    hdrbg_test_obj(hd, tv);
-    free(hd);
-    fclose(tv);
-    printf("All tests passed.\n");
+    hd = hd == NULL ? &hdrbg : hd;
+    hdrbg_tests_pr(hd, false, tv);
+    hdrbg_tests_pr(hd, true, tv);
 }

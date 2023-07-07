@@ -37,7 +37,7 @@ int64_t hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right);
 double long hdrbg_real(struct hdrbg_t *hd);
 void hdrbg_zero(struct hdrbg_t *hd);
 void hdrbg_dump(uint8_t const *m_bytes, size_t m_length);
-void hdrbg_test(void);
+void hdrbg_tests(struct hdrbg_t *hd, void *tv);
 #ifdef __cplusplus
 }
 #endif
