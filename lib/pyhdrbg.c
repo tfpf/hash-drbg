@@ -16,7 +16,7 @@ do  \
         case HDRBG_ERR_NO_ENTROPY: return PyErr_Format(PyExc_OSError, "entropy source not found");  \
         case HDRBG_ERR_INSUFFICIENT_ENTROPY: return PyErr_Format(PyExc_RuntimeError, "insufficient entropy");  \
         case HDRBG_ERR_INVALID_REQUEST: return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, 65536]");  \
-        default:  \
+        default: break;  \
     }  \
 }  \
 while(false)
