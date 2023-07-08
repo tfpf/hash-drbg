@@ -13,9 +13,9 @@ do  \
     switch(hdrbg_err_get())  \
     {  \
         case HDRBG_ERR_OUT_OF_MEMORY: return PyErr_NoMemory();  \
-        case HDRBG_ERR_NO_ENTROPY: return PyErr_Format(PyExc_OSError, "Entropy source not found.");  \
-        case HDRBG_ERR_INSUFFICIENT_ENTROPY: return PyErr_Format(PyExc_RuntimeError, "Insufficient entropy.");  \
-        case HDRBG_ERR_INVALID_REQUEST: return PyErr_Format(PyExc_ValueError, "Can generate only 1 to 65536 bytes at once.");  \
+        case HDRBG_ERR_NO_ENTROPY: return PyErr_Format(PyExc_OSError, "entropy source not found");  \
+        case HDRBG_ERR_INSUFFICIENT_ENTROPY: return PyErr_Format(PyExc_RuntimeError, "insufficient entropy");  \
+        case HDRBG_ERR_INVALID_REQUEST: return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, 65536]");  \
         default:  \
     }  \
 }  \
@@ -50,6 +50,53 @@ Rand(PyObject *self, PyObject *args)
 
 
 static PyObject *
+Uint(PyObject *self, PyObject *args)
+{
+    int long long unsigned modulus;
+    if(!PyArg_ParseTuple(args, "K", &modulus))
+    {
+        return NULL;
+    }
+    modulus = PyLong_AsUnsignedLongLong(PyTuple_GET_ITEM(args, 0));
+    if(PyErr_Occurred() != NULL || modulus == 0 || modulus > UINT64_MAX)
+    {
+        return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, %"PRIu64"]", UINT64_MAX);
+    }
+    uint64_t r = hdrbg_uint(NULL, modulus);
+    HDRBG_HANDLE_ERROR;
+    return PyLong_FromUnsignedLongLong(r);
+}
+
+
+static PyObject *
+Span(PyObject *self, PyObject *args)
+{
+    int long long left, right;
+    PyObject *err = NULL;
+    if(!PyArg_ParseTuple(args, "LL", &left, &right))
+    {
+        err = PyErr_Occurred();
+        if(!PyErr_GivenExceptionMatches(err, PyExc_OverflowError))
+        {
+            return NULL;
+        }
+    }
+    if(err != NULL || left < INT64_MIN || left > INT64_MAX || right < INT64_MIN || right > INT64_MAX || left >= right)
+    {
+        return PyErr_Format(
+            PyExc_ValueError,
+            "argument 1 must be less than argument 2; both must be integers in [%"PRId64", %"PRId64"] "
+            "and fit in the C `long long` type",
+            INT64_MIN, INT64_MAX
+        );
+    }
+    int64_t r = hdrbg_span(NULL, left, right);
+    HDRBG_HANDLE_ERROR;
+    return PyLong_FromLongLong(r);
+}
+
+
+static PyObject *
 Real(PyObject *self, PyObject *args)
 {
     double long r = hdrbg_real(NULL);
@@ -73,6 +120,21 @@ PyDoc_STRVAR(
     ":return: Uniform pseudorandom integer in the range 0 (inclusive) to 2 ** 64 − 1 (inclusive)."
 );
 PyDoc_STRVAR(
+    uint_doc,
+    "uint(modulus) -> int\n"
+    "Generate a cryptographically secure pseudorandom residue.\n\n"
+    ":param modulus: Right end of the interval. Must be positive.\n\n"
+    ":return: Uniform pseudorandom integer in the range 0 (inclusive) to ``modulus`` (exclusive)."
+);
+PyDoc_STRVAR(
+    span_doc,
+    "span(left, right) -> int\n"
+    "Generate a cryptographically secure pseudorandom residue offset.\n\n"
+    ":param left: Left end of the interval.\n"
+    ":param right: Right end of the interval. Must be greater than ``left``.\n\n"
+    ":return: Uniform pseudorandom integer in the range ``left`` (inclusive) to ``right`` (exclusive)."
+);
+PyDoc_STRVAR(
     real_doc,
     "real() -> float\n"
     "Generate a cryptographically secure pseudorandom fraction.\n\n"
@@ -82,6 +144,8 @@ static PyMethodDef pyhdrbg_methods[] =
 {
     {"bytes", Bytes, METH_VARARGS, bytes_doc},
     {"rand", Rand, METH_NOARGS, rand_doc},
+    {"uint", Uint, METH_VARARGS, uint_doc},
+    {"span", Span, METH_VARARGS, span_doc},
     {"real", Real, METH_NOARGS, real_doc},
     {NULL, NULL, 0, NULL},
 };
