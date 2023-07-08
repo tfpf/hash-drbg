@@ -5,7 +5,7 @@ Prefix = /usr
 Package = hdrbg
 Header = ./include/$(Package).h
 HeaderDestination = $(Prefix)/include/$(Package).h
-Sources = $(wildcard lib/*.c)
+Sources = $(filter-out lib/pyhdrbg.c, $(wildcard lib/*.c))
 Objects = $(Sources:.c=.o)
 ifeq ($(OS), Windows_NT)
 Library = ./lib/$(Package).dll

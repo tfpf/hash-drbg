@@ -300,9 +300,12 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
 {
     size_t retval = 0;
 
-    if(r_length > HDRBG_REQUEST_LIMIT)
+    if(r_length == 0 || r_length > HDRBG_REQUEST_LIMIT)
     {
-        hdrbg_err = HDRBG_ERR_INVALID_REQUEST;
+        if(r_length > HDRBG_REQUEST_LIMIT)
+        {
+            hdrbg_err = HDRBG_ERR_INVALID_REQUEST;
+        }
         return 0;
     }
     hd = hd == NULL ? &hdrbg : hd;
