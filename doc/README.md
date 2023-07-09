@@ -19,6 +19,10 @@
     probability.
 * In C, a byte need not be 8 bits wide. However, this implementation uses the term 'byte' to refer to an 8-bit number.
   Hence, fixed-width integer types are used liberally.
+* The `hd` argument of any function (where applicable) denotes HDRBG object to use.
+  * If it is `NULL`, the internal HDRBG object is used.
+  * For instance, `hdrbg_rand(NULL)` and `hdrbg_rand(foo)` are both valid invocations of `hdrbg_rand`—the former
+    generates a pseudorandom number using the internal HDRBG object, and the latter does so using `foo`.
 * Whenever a function has a Python API, there is no option to specify the `hd` argument. In other words, all Python
   functions use the internal HDRBG object. The CPython implementation has a global interpreter lock, and (looking at
   the Python bytecode disassembly) a C function call corresponds to a single Python bytecode instruction. Hence, there
