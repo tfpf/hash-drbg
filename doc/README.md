@@ -204,8 +204,12 @@ resistance.
 ```C
 void hdrbg_zero(struct hdrbg_t *hd);
 ```
-Zero (clear) and/or destroy an HDRBG object.
+Zero (clear) and/or destroy an HDRBG object, making it unsuitable for further use.
 * `hd` HDRBG object to zero and destroy. If `NULL`, the internal HDRBG object will be zeroed.
+
+| C                  | Python Equivalent              |
+| :----------------: | :----------------------------: |
+| `hdrbg_zero(NULL)` | Closing the Python interpreter |
 
 ---
 

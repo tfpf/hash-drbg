@@ -128,6 +128,13 @@ Real(PyObject *self, PyObject *args)
 }
 
 
+static void
+Zero(void)
+{
+    hdrbg_zero(NULL);
+}
+
+
 // Module information.
 PyDoc_STRVAR(
     bytes_doc,
@@ -189,6 +196,10 @@ PyInit_hdrbg(void)
     if(hdrbg_init(false) == NULL)
     {
         ERR_CHECK;
+    }
+    if(Py_AtExit(Zero) < 0)
+    {
+        return NULL;
     }
     return PyModule_Create(&pyhdrbg_module);
 }
