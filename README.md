@@ -6,8 +6,8 @@
   doi:10.6028/NIST.FIPS.180-4.
 
 # Hash Deterministic Random Bit Generator (HDRBG): Cryptographically Secure Pseudorandom Number Generator
-This package provides a cryptographically secure pseudorandom number generator for C and C++. It is mostly compliant
-with the specification given in NIST SP 800-90A.
+This package provides a cryptographically secure pseudorandom number generator for C, C++ and Python. It is mostly
+compliant with the specification given in NIST SP 800-90A.
 
 See [`doc`](doc) for the documentation of this package. [`examples`](examples) contains usage examples. For performance
 analysis, go to [`benchmarks`](benchmarks).
@@ -18,6 +18,8 @@ These are the versions I have tested the installation with. Older versions may a
 * GCC ≥ 9.4.0 or Clang ≥ 12.0.0
 * Git ≥ 2.30.2
 * GNU Make ≥ 4.2.1
+* CPython ≥ 3.8 and its C headers and library
+* pip ≥ 23.0
 
 On Windows, these are available via [MSYS2](https://www.msys2.org).
 
@@ -60,3 +62,16 @@ and run it using
 ./example
 ```
 to see some random numbers.
+
+## Install for Python
+```
+pip install git+https://github.com/tfpf/hash-drbg.git
+```
+or
+```
+git clone https://github.com/tfpf/hash-drbg.git
+cd hash-drbg
+pip install .
+```
+
+This does not currently work on Windows because of issues with MSYS2.

@@ -82,7 +82,9 @@ Create and/or initialise (seed) an HDRBG object.
 If `dma` is `true` and this function succeeds, the returned HDRBG object must be destroyed using `hdrbg_zero` to avoid
 memory leaks.
 
-In Python, the internal HDRBG object is automatically initialised when the module is imported.
+| C                   | Python Equivalent |
+| :-----------------: | :---------------: |
+| `hdrbg_init(false)` | `import hdrbg`    |
 
 ---
 
