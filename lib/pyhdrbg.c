@@ -6,20 +6,43 @@
 
 #include "hdrbg.h"
 
-
-#define HDRBG_HANDLE_ERROR  \
+#define ERR_CHECK  \
 do  \
 {  \
-    switch(hdrbg_err_get())  \
+    if(err_check() < 0)  \
     {  \
-        case HDRBG_ERR_OUT_OF_MEMORY: return PyErr_NoMemory();  \
-        case HDRBG_ERR_NO_ENTROPY: return PyErr_Format(PyExc_OSError, "entropy source not found");  \
-        case HDRBG_ERR_INSUFFICIENT_ENTROPY: return PyErr_Format(PyExc_RuntimeError, "insufficient entropy");  \
-        case HDRBG_ERR_INVALID_REQUEST: return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, 65536]");  \
-        default: break;  \
+        return NULL;  \
     }  \
 }  \
 while(false)
+
+
+/******************************************************************************
+ * Check whether the error indicator is set. If yes, set a Python exception.
+ *
+ * @return If the error indicator was not set: 0. If it was set: -1.
+ *****************************************************************************/
+static int
+err_check(void)
+{
+    switch(hdrbg_err_get())
+    {
+        case HDRBG_ERR_NONE:
+            return 0;
+        case HDRBG_ERR_OUT_OF_MEMORY:
+            PyErr_Format(PyExc_MemoryError, "insufficient memory");
+            return -1;
+        case HDRBG_ERR_NO_ENTROPY:
+            PyErr_Format(PyExc_OSError, "entropy source not found");
+            return -1;
+        case HDRBG_ERR_INSUFFICIENT_ENTROPY:
+            PyErr_Format(PyExc_RuntimeError, "insufficient entropy");
+            return -1;
+        case HDRBG_ERR_INVALID_REQUEST:
+            PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [0, 65536]");
+            return -1;
+    }
+}
 
 
 static PyObject *
@@ -32,7 +55,7 @@ Bytes(PyObject *self, PyObject *args)
     }
     static uint8_t r_bytes[65536ULL];
     hdrbg_fill(NULL, false, r_bytes, r_length);
-    HDRBG_HANDLE_ERROR;
+    ERR_CHECK;
 
     // This is okay: CPython works only on systems on which `char` is 8 bits
     // wide.
@@ -44,7 +67,7 @@ static PyObject *
 Rand(PyObject *self, PyObject *args)
 {
     uint64_t r = hdrbg_rand(NULL);
-    HDRBG_HANDLE_ERROR;
+    ERR_CHECK;
     return PyLong_FromUnsignedLongLong(r);
 }
 
@@ -63,7 +86,7 @@ Uint(PyObject *self, PyObject *args)
         return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, %"PRIu64"]", UINT64_MAX);
     }
     uint64_t r = hdrbg_uint(NULL, modulus);
-    HDRBG_HANDLE_ERROR;
+    ERR_CHECK;
     return PyLong_FromUnsignedLongLong(r);
 }
 
@@ -91,7 +114,7 @@ Span(PyObject *self, PyObject *args)
         );
     }
     int64_t r = hdrbg_span(NULL, left, right);
-    HDRBG_HANDLE_ERROR;
+    ERR_CHECK;
     return PyLong_FromLongLong(r);
 }
 
@@ -100,7 +123,7 @@ static PyObject *
 Real(PyObject *self, PyObject *args)
 {
     double long r = hdrbg_real(NULL);
-    HDRBG_HANDLE_ERROR;
+    ERR_CHECK;
     return PyFloat_FromDouble(r);
 }
 
@@ -165,7 +188,7 @@ PyInit_hdrbg(void)
 {
     if(hdrbg_init(false) == NULL)
     {
-        HDRBG_HANDLE_ERROR;
+        ERR_CHECK;
     }
     return PyModule_Create(&pyhdrbg_module);
 }
