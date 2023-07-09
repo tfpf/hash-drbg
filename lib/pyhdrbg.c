@@ -27,8 +27,6 @@ err_check(void)
 {
     switch(hdrbg_err_get())
     {
-        case HDRBG_ERR_NONE:
-            return 0;
         case HDRBG_ERR_OUT_OF_MEMORY:
             PyErr_Format(PyExc_MemoryError, "insufficient memory");
             return -1;
@@ -41,6 +39,8 @@ err_check(void)
         case HDRBG_ERR_INVALID_REQUEST:
             PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [0, 65536]");
             return -1;
+        default:
+            return 0;
     }
 }
 
