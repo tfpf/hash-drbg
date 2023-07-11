@@ -21,10 +21,12 @@ These are the versions I have tested the installation with. Older versions may a
 * CPython ≥ 3.8 and its C headers and library
 * pip ≥ 23.0
 
-On Windows, these are available via [MSYS2](https://www.msys2.org).
+On Windows, these are available natively via [MSYS2](https://www.msys2.org) and in a Linux environment via
+[WSL](https://learn.microsoft.com/en-us/windows/wsl/about).
 
-The installation commands mentioned below must be entered in the terminal if you are on Linux or the MSYS2 terminal if
-you are on Windows.
+The installation commands mentioned below must be entered in
+* the terminal if you are on Linux, or
+* the MSYS2 terminal or WSL terminal if you are on Windows.
 
 ## Install for C (and C++)
 ```
