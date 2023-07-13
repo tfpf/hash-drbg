@@ -29,11 +29,11 @@ The installation commands mentioned below must be entered in
 * the MSYS2 terminal or WSL terminal if you are on Windows.
 
 ## Install for C (and C++)
-```
+```shell
 curl https://raw.githubusercontent.com/tfpf/hash-drbg/main/install.sh | sh
 ```
 or
-```
+```shell
 git clone https://github.com/tfpf/hash-drbg.git
 cd hash-drbg
 ./install.sh
@@ -66,11 +66,11 @@ and run it using
 to see some random numbers.
 
 ## Install for Python
-```
+```shell
 pip install git+https://github.com/tfpf/hash-drbg.git
 ```
 or
-```
+```shell
 git clone https://github.com/tfpf/hash-drbg.git
 cd hash-drbg
 pip install .
