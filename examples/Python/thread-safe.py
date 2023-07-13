@@ -2,7 +2,7 @@
 
 import hdrbg
 
-print(hdrbg.bytes(64).hex())
+print(hdrbg.fill(64).hex())
 
 for _ in range(4):
     print(hdrbg.rand(), end=' ')
