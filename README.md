@@ -76,4 +76,4 @@ cd hash-drbg
 pip install .
 ```
 
-This does not currently work on Windows because of issues with MSYS2.
+This does not currently work on MSYS2.
