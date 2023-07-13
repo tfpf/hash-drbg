@@ -46,7 +46,7 @@ err_check(void)
 
 
 static PyObject *
-Bytes(PyObject *self, PyObject *args)
+Fill(PyObject *self, PyObject *args)
 {
     Py_ssize_t r_length;
     if(!PyArg_ParseTuple(args, "n", &r_length))
@@ -138,7 +138,7 @@ Zero(void)
 // Module information.
 PyDoc_STRVAR(
     bytes_doc,
-    "bytes(r_length) -> bytes\n"
+    "fill(r_length) -> bytes\n"
     "Generate cryptographically secure pseudorandom bytes.\n\n"
     ":param r_length: Number of bytes to generate. At most 65536.\n\n"
     ":return: Uniform pseudorandom bytes object."
@@ -172,7 +172,7 @@ PyDoc_STRVAR(
 );
 static PyMethodDef pyhdrbg_methods[] =
 {
-    {"bytes", Bytes, METH_VARARGS, bytes_doc},
+    {"fill", Fill, METH_VARARGS, bytes_doc},
     {"rand", Rand, METH_NOARGS, rand_doc},
     {"uint", Uint, METH_VARARGS, uint_doc},
     {"span", Span, METH_VARARGS, span_doc},
