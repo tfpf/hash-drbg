@@ -1,7 +1,7 @@
 #include <cinttypes>
 #include <cstddef>
-#include <cstdio>
 #include <hdrbg.h>
+#include <iostream>
 
 int main(void)
 {
@@ -12,12 +12,12 @@ int main(void)
 
     for(int i = 0; i < 4; ++i)
     {
-        std::printf("%" PRIu64 " ", hdrbg_rand(NULL));
+        std::cout << hdrbg_rand(NULL) << ' ';
     }
     for(int i = 0; i < 4; ++i)
     {
-        std::printf("%Lf ", hdrbg_real(NULL));
+        std::cout << hdrbg_real(NULL) << ' ';
     }
-    std::printf("\n");
+    std::cout << '\n';
     hdrbg_zero(NULL);
 }
