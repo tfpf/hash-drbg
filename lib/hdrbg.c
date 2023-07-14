@@ -31,8 +31,6 @@ hdrbg_err = HDRBG_ERR_NONE;
 #define HDRBG_SECURITY_STRENGTH 32
 #define HDRBG_NONCE1_LENGTH 8
 #define HDRBG_NONCE2_LENGTH 8
-#define HDRBG_SEEDMATERIAL_LENGTH (HDRBG_SECURITY_STRENGTH + HDRBG_NONCE1_LENGTH + HDRBG_NONCE2_LENGTH)
-#define HDRBG_RESEEDMATERIAL_LENGTH (1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH)
 #define HDRBG_OUTPUT_LENGTH 32
 #define HDRBG_REQUEST_LIMIT (1ULL << 16)
 #define HDRBG_RESEED_INTERVAL (1ULL << 48)
@@ -40,8 +38,6 @@ hdrbg_err = HDRBG_ERR_NONE;
 // Characteristics of test vectors.
 #define HDRBG_TV_ENTROPY_LENGTH 32
 #define HDRBG_TV_NONCE_LENGTH 16
-#define HDRBG_TV_SEEDMATERIAL_LENGTH (HDRBG_TV_ENTROPY_LENGTH + HDRBG_TV_NONCE_LENGTH)
-#define HDRBG_TV_RESEEDMATERIAL_LENGTH (1 + HDRBG_SEED_LENGTH + HDRBG_TV_ENTROPY_LENGTH)
 #define HDRBG_TV_REQUEST_LENGTH 128
 
 struct hdrbg_t
@@ -238,7 +234,7 @@ hdrbg_init(bool dma)
         hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
         return NULL;
     }
-    uint8_t seedmaterial[HDRBG_SEEDMATERIAL_LENGTH];
+    uint8_t seedmaterial[HDRBG_SECURITY_STRENGTH + HDRBG_NONCE1_LENGTH + HDRBG_NONCE2_LENGTH];
     if(streamtobytes(NULL, seedmaterial, HDRBG_SECURITY_STRENGTH) < HDRBG_SECURITY_STRENGTH)
     {
         goto cleanup_hd;
@@ -263,7 +259,7 @@ struct hdrbg_t *
 hdrbg_reinit(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
-    uint8_t reseedmaterial[HDRBG_RESEEDMATERIAL_LENGTH] = {0x01U};
+    uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
     memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
     if(streamtobytes(NULL, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH) < HDRBG_SECURITY_STRENGTH)
     {
@@ -474,15 +470,15 @@ hdrbg_tests_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
     for(int i = 0; i < 60; ++i)
     {
         // Initialise.
-        uint8_t seedmaterial[HDRBG_TV_SEEDMATERIAL_LENGTH];
-        streamtobytes(tv, seedmaterial, HDRBG_TV_SEEDMATERIAL_LENGTH);
-        hdrbg_seed(hd, seedmaterial, HDRBG_TV_SEEDMATERIAL_LENGTH);
+        uint8_t seedmaterial[HDRBG_TV_ENTROPY_LENGTH + HDRBG_TV_NONCE_LENGTH];
+        streamtobytes(tv, seedmaterial, HDRBG_TV_ENTROPY_LENGTH + HDRBG_TV_NONCE_LENGTH);
+        hdrbg_seed(hd, seedmaterial, sizeof seedmaterial / sizeof *seedmaterial);
 
         // Reinitialise.
-        uint8_t reseedmaterial[HDRBG_TV_RESEEDMATERIAL_LENGTH] = {0x01U};
+        uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_TV_ENTROPY_LENGTH] = {0x01U};
         memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
         streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_ENTROPY_LENGTH);
-        hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDMATERIAL_LENGTH);
+        hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
 
         // Generate.
         uint8_t observed[HDRBG_TV_REQUEST_LENGTH];
@@ -493,7 +489,7 @@ hdrbg_tests_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         {
             memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
             streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_ENTROPY_LENGTH);
-            hdrbg_seed(hd, reseedmaterial, HDRBG_TV_RESEEDMATERIAL_LENGTH);
+            hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
         }
 
         // Generate.
