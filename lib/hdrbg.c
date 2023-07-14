@@ -129,19 +129,13 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
     {
         m_bytes[0] = i;
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-        if(sha256(m_bytes, m_length, tmp) == NULL)
-        {
-            hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
-            goto cleanup_m_bytes;
-        }
+        sha256(m_bytes, m_length, tmp);
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
         h_length -= len;
         h_bytes += len;
         retval += len;
     }
-
-cleanup_m_bytes:
     memclear(m_bytes, m_length * sizeof *m_bytes);
     free(m_bytes);
     return retval;
@@ -155,14 +149,10 @@ cleanup_m_bytes:
  * @param h_bytes Array to store the output bytes in. (It must have sufficient
  *     space for `h_length` elements.)
  * @param h_length Number of output bytes required.
- *
- * @return Number of bytes stored.
  *****************************************************************************/
-static size_t
+static void
 hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
 {
-    size_t retval = 0;
-
     // Construct the data to be hashed.
     uint8_t m_bytes[HDRBG_SEED_LENGTH];
     memcpy(m_bytes, m_bytes_, sizeof m_bytes);
@@ -172,20 +162,14 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
     for(size_t i = 0; i < iterations; ++i)
     {
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-        if(sha256(m_bytes, HDRBG_SEED_LENGTH, tmp) == NULL)
-        {
-            hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
-            return retval;
-        }
+        sha256(m_bytes, HDRBG_SEED_LENGTH, tmp);
         size_t len = h_length >= HDRBG_OUTPUT_LENGTH ? HDRBG_OUTPUT_LENGTH : h_length;
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
         h_length -= len;
         h_bytes += len;
-        retval += len;
         uint8_t one = 1;
         add_accumulate(m_bytes, HDRBG_SEED_LENGTH, &one, 1);
     }
-    return retval;
 }
 
 /******************************************************************************
@@ -298,8 +282,6 @@ hdrbg_reinit(struct hdrbg_t *hd)
 size_t
 hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
 {
-    size_t retval = 0;
-
     if(r_length == 0 || r_length > HDRBG_REQUEST_LIMIT)
     {
         if(r_length > HDRBG_REQUEST_LIMIT)
@@ -316,26 +298,18 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, siz
             return 0;
         }
     }
-    retval = hash_gen(hd->V + 1, r_bytes, r_length);
-    if(retval < r_length)
-    {
-        return retval;
-    }
+    hash_gen(hd->V + 1, r_bytes, r_length);
 
     // Mutate the state.
     hd->V[0] = 0x03U;
     uint8_t tmp[HDRBG_OUTPUT_LENGTH];
-    if(sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp) == NULL)
-    {
-        hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
-        return retval;
-    }
+    sha256(hd->V, HDRBG_SEED_LENGTH + 1, tmp);
     uint8_t gen_count[8];
     memdecompose(gen_count, 8, ++hd->gen_count);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, tmp, HDRBG_OUTPUT_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
-    return retval;
+    return r_length;
 }
 
 /******************************************************************************

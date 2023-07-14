@@ -1,6 +1,5 @@
 #include <inttypes.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "extras.h"
@@ -37,13 +36,12 @@ sha256_bytes[32];
  * Calculate the hash of the given data.
  *
  * @param m_bytes_ Array of bytes representing the big-endian data to hash.
- * @param m_length_ Number of bytes to process. At most 2305843009213693951.
+ * @param m_length_ Number of bytes to process.
  * @param h_bytes Array to store the bytes of the hash in, in big-endian order.
  *     (It must have sufficient space for 32 elements.) If `NULL`, the hash
  *     will be stored in a static array.
  *
- * @return On success: array of bytes representing the big-endian hash of the
- *     data. On failure: `NULL`.
+ * @return Array of bytes representing the big-endian hash of the data.
  *****************************************************************************/
 uint8_t *
 sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
@@ -52,30 +50,45 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     uint32_t h_words[8];
     memcpy(h_words, sha256_init, sizeof sha256_init);
 
-    // Create a padded copy whose width in bits is a multiple of 512. Note that
-    // the amount of zero-padding required is odd, hence a non-zero number.
+    // The amount of zero-padding required is odd, hence a non-zero number.
     uint64_t nbits = (uint64_t)m_length_ << 3;
     size_t zeros = 512 - ((nbits + 65) & 511U);
-    size_t m_length = m_length_ + ((1 + zeros) >> 3) + 8;
-    uint8_t *m_bytes = calloc(m_length, sizeof *m_bytes);
-    if(m_bytes == NULL)
-    {
-        return NULL;
-    }
-    memcpy(m_bytes, m_bytes_, m_length_ * sizeof *m_bytes_);
-    m_bytes[m_length_] = 0x80U;
-    memdecompose(m_bytes + m_length - 8, 8, nbits);
+
+    // Store the padding bytes in a separate array.
+    size_t p_length = ((1 + zeros) >> 3) + 8;
+    size_t m_length = m_length_ + p_length;
+    uint8_t p_bytes[72] = {0x80U};
+    memdecompose(p_bytes + p_length - 8, 8, nbits);
 
     // Process each 512-bit chunk.
-    uint8_t *m_iter = m_bytes;
+    uint8_t const *m_iter = m_bytes_;
     for(size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.
-        uint32_t schedule[64];
+        uint32_t schedule[64] = {0};
         for(int j = 0; j < 16; ++j)
         {
-            schedule[j] = memcompose(m_iter, 4);
-            m_iter += 4;
+            uint8_t const *m_iter_ = m_iter + 4;
+            if(m_iter < m_bytes_ + m_length_ && m_iter_ >= m_bytes_ + m_length_)
+            {
+                // Reading four bytes will cross the message-padding boundary.
+                // Switch over from message bytes to padding bytes.
+                int k;
+                for(k = 0; m_iter < m_bytes_ + m_length_; ++k, ++m_iter)
+                {
+                    schedule[j] = schedule[j] << 8 | *m_iter;
+                }
+                m_iter = p_bytes;
+                for(; k < 4; ++k, ++m_iter)
+                {
+                    schedule[j] = schedule[j] << 8 | *m_iter;
+                }
+            }
+            else
+            {
+                schedule[j] = memcompose(m_iter, 4);
+                m_iter = m_iter_;
+            }
         }
         for(int j = 16; j < 64; ++j)
         {
@@ -110,8 +123,6 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
             h_words[j] += curr[j];
         }
     }
-    memclear(m_bytes, m_length * sizeof *m_bytes);
-    free(m_bytes);
 
     // Copy the hash to the output array.
     h_bytes = h_bytes == NULL ? sha256_bytes : h_bytes;
