@@ -19,7 +19,7 @@
     probability.
 * In C, a byte need not be 8 bits wide. However, this implementation uses the term 'byte' to refer to an 8-bit number.
   Hence, fixed-width integer types are used liberally.
-* The `hd` argument of any function (where applicable) denotes HDRBG object to use.
+* The `hd` argument of any function (where applicable) denotes the HDRBG object to use.
   * If it is `NULL`, the internal HDRBG object is used.
   * For instance, `hdrbg_rand(NULL)` and `hdrbg_rand(foo)` are both valid invocations of `hdrbg_rand`—the former
     generates a pseudorandom number using the internal HDRBG object, and the latter does so using `foo`.
