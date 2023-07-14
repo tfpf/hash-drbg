@@ -13,7 +13,8 @@ See [`doc`](doc) for the documentation of this package. [`examples`](examples) c
 analysis, go to [`benchmarks`](benchmarks).
 
 ## Installation Requirements
-These are the versions I have tested the installation with. Older versions may also work.
+These are the versions I have tested the installation with. Older versions may also work. You may not need all of
+these, depending on how and what you are installing
 * cURL ≥ 7.68.0
 * GCC ≥ 9.4.0 or Clang ≥ 12.0.0
 * Git ≥ 2.30.2
