@@ -49,9 +49,9 @@ memcompose(uint8_t const *m_bytes, size_t m_length)
 size_t
 memdecompose(uint8_t *m_bytes, size_t m_length, uint64_t value)
 {
-    for(size_t i = 0; i < m_length; ++i)
+    for(size_t i = m_length; i > 0; --i)
     {
-        m_bytes[m_length - 1 - i] = value;
+        m_bytes[i - 1] = value;
         value >>= 8;
     }
     return m_length;
