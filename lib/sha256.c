@@ -54,14 +54,14 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     uint64_t nbits = (uint64_t)m_length_ << 3;
     size_t zeros = 512 - ((nbits + 65) & 511U);
 
-    // Store the padding bytes in a separate array.
+    // Store the padding bytes in a sufficiently large array.
     size_t p_length = ((1 + zeros) >> 3) + 8;
-    size_t m_length = m_length_ + p_length;
     uint8_t p_bytes[72] = {0x80U};
     memdecompose(p_bytes + p_length - 8, 8, nbits);
 
     // Process each 512-bit chunk.
     uint8_t const *m_iter = m_bytes_;
+    size_t m_length = m_length_ + p_length;
     for(size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.

@@ -44,7 +44,7 @@ struct hdrbg_t
 {
     // The first member is prepended with a byte whenever it is processed, so
     // keep an extra byte.
-    uint8_t V[HDRBG_SEED_LENGTH + 1];
+    uint8_t V[1 + HDRBG_SEED_LENGTH];
     uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
 };
@@ -99,22 +99,13 @@ add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t
  * @param h_bytes Array to store the output bytes in. (It must have sufficient
  *     space for `h_length` elements.)
  * @param h_length Number of output bytes required.
- *
- * @return Number of bytes stored.
  *****************************************************************************/
-static size_t
+static void
 hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_length)
 {
-    size_t retval = 0;
-
-    // Construct the data to be hashed.
+    // Construct the data to be hashed in a sufficiently large array.
     size_t m_length = 5 + m_length_;
-    uint8_t *m_bytes = malloc(m_length * sizeof *m_bytes);
-    if(m_bytes == NULL)
-    {
-        hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
-        return 0;
-    }
+    uint8_t m_bytes[93];
     uint32_t nbits = (uint32_t)h_length << 3;
     memdecompose(m_bytes + 1, 4, nbits);
     memcpy(m_bytes + 5, m_bytes_, m_length_ * sizeof *m_bytes_);
@@ -130,11 +121,7 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
         memcpy(h_bytes, tmp, len * sizeof *h_bytes);
         h_length -= len;
         h_bytes += len;
-        retval += len;
     }
-    memclear(m_bytes, m_length * sizeof *m_bytes);
-    free(m_bytes);
-    return retval;
 }
 
 /******************************************************************************
@@ -174,20 +161,14 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
  * @param hd HDRBG object.
  * @param s_bytes Array to derive the values of the members from.
  * @param s_length Number of elements in the array.
- *
- * @return On success: 0. On failure: -1.
  *****************************************************************************/
-static int
+static void
 hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
 {
     hd->V[0] = 0x00U;
-    if(hash_df(s_bytes, s_length, hd->V + 1, HDRBG_SEED_LENGTH) < HDRBG_SEED_LENGTH
-    || hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C, HDRBG_SEED_LENGTH) < HDRBG_SEED_LENGTH)
-    {
-        return -1;
-    }
+    hash_df(s_bytes, s_length, hd->V + 1, HDRBG_SEED_LENGTH);
+    hash_df(hd->V, HDRBG_SEED_LENGTH + 1, hd->C, HDRBG_SEED_LENGTH);
     hd->gen_count = 0;
-    return 0;
 }
 
 /******************************************************************************
@@ -241,10 +222,7 @@ hdrbg_init(bool dma)
     }
     memdecompose(seedmaterial + HDRBG_SECURITY_STRENGTH, HDRBG_NONCE1_LENGTH, time(NULL));
     memdecompose(seedmaterial + HDRBG_SECURITY_STRENGTH + HDRBG_NONCE1_LENGTH, HDRBG_NONCE2_LENGTH, seq_num++);
-    if(hdrbg_seed(hd, seedmaterial, sizeof seedmaterial / sizeof *seedmaterial) < 0)
-    {
-        goto cleanup_hd;
-    }
+    hdrbg_seed(hd, seedmaterial, sizeof seedmaterial / sizeof *seedmaterial);
     return hd;
 
 cleanup_hd:
@@ -265,10 +243,7 @@ hdrbg_reinit(struct hdrbg_t *hd)
     {
         return NULL;
     }
-    if(hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial) < 0)
-    {
-        return NULL;
-    }
+    hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
     return hd;
 }
 
