@@ -170,6 +170,11 @@ PyDoc_STRVAR(
     "Generate a cryptographically secure pseudorandom fraction.\n\n"
     ":return: Uniform pseudorandom real in the range 0 (inclusive) to 1 (inclusive)."
 );
+PyDoc_STRVAR(
+    pyhdrbg_doc,
+    "Python API for a C implementation of Hash DRBG "
+    "(see https://github.com/tfpf/hash-drbg/blob/main/doc for the full documentation)"
+);
 static PyMethodDef pyhdrbg_methods[] =
 {
     {"fill", Fill, METH_VARARGS, bytes_doc},
@@ -179,12 +184,11 @@ static PyMethodDef pyhdrbg_methods[] =
     {"real", Real, METH_NOARGS, real_doc},
     {NULL, NULL, 0, NULL},
 };
-static PyModuleDef pyhdrbg_module =
+static PyModuleDef pyhdrbg =
 {
     PyModuleDef_HEAD_INIT,
     "hdrbg",
-    "Python API for a C implementation of Hash DRBG "
-    "(see https://github.com/tfpf/hash-drbg/blob/main/doc for the full documentation)",
+    pyhdrbg_doc,
     -1,
     pyhdrbg_methods,
 };
@@ -201,5 +205,5 @@ PyInit_hdrbg(void)
     {
         return NULL;
     }
-    return PyModule_Create(&pyhdrbg_module);
+    return PyModule_Create(&pyhdrbg);
 }
