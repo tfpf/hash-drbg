@@ -2,6 +2,7 @@
 #include <Python.h>
 
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 
 #include "hdrbg.h"
@@ -83,7 +84,7 @@ Uint(PyObject *self, PyObject *args)
     modulus = PyLong_AsUnsignedLongLong(PyTuple_GET_ITEM(args, 0));
     if(PyErr_Occurred() != NULL || modulus == 0 || modulus > UINT64_MAX)
     {
-        return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, %"PRIu64"]", UINT64_MAX);
+        return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, %llu]", UINT64_MAX);
     }
     uint64_t r = hdrbg_uint(NULL, modulus);
     ERR_CHECK;
@@ -108,9 +109,8 @@ Span(PyObject *self, PyObject *args)
     {
         return PyErr_Format(
             PyExc_ValueError,
-            "argument 1 must be less than argument 2; both must be integers in [%"PRId64", %"PRId64"] "
-            "and fit in the C `long long` type",
-            INT64_MIN, INT64_MAX
+            "argument 1 must be less than argument 2; both must be integers in [%lld, %lld]",
+            INT64_MIN < LLONG_MIN ? LLONG_MIN : INT64_MIN, INT64_MAX
         );
     }
     int64_t r = hdrbg_span(NULL, left, right);
@@ -191,6 +191,10 @@ static PyModuleDef pyhdrbg =
     pyhdrbg_doc,
     -1,
     pyhdrbg_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
 };
 
 
