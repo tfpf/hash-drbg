@@ -32,7 +32,7 @@ extern "C"
 enum hdrbg_err_t hdrbg_err_get(void);
 struct hdrbg_t *hdrbg_init(bool dma);
 struct hdrbg_t *hdrbg_reinit(struct hdrbg_t *hd);
-int long unsigned hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length);
+int hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length);
 uint64_t hdrbg_rand(struct hdrbg_t *hd);
 uint64_t hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus);
 int64_t hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right);

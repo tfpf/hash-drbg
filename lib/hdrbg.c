@@ -250,15 +250,16 @@ hdrbg_reinit(struct hdrbg_t *hd)
 /******************************************************************************
  * Generate cryptographically secure pseudorandom bytes.
  *****************************************************************************/
-int long unsigned
+int
 hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length)
 {
-    if(r_length == 0 || r_length > HDRBG_REQUEST_LIMIT)
+    if(r_length > HDRBG_REQUEST_LIMIT)
     {
-        if(r_length > HDRBG_REQUEST_LIMIT)
-        {
-            hdrbg_err = HDRBG_ERR_INVALID_REQUEST_FILL;
-        }
+        hdrbg_err = HDRBG_ERR_INVALID_REQUEST_FILL;
+        return -1;
+    }
+    if(r_length == 0)
+    {
         return 0;
     }
     hd = hd == NULL ? &hdrbg : hd;
@@ -266,7 +267,7 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int
     {
         if(hdrbg_reinit(hd) == NULL)
         {
-            return 0;
+            return -1;
         }
     }
     hash_gen(hd->V + 1, r_bytes, r_length);
@@ -280,7 +281,7 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, tmp, HDRBG_OUTPUT_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, hd->C, HDRBG_SEED_LENGTH);
     add_accumulate(hd->V + 1, HDRBG_SEED_LENGTH, gen_count, 8);
-    return r_length;
+    return 0;
 }
 
 /******************************************************************************
@@ -295,7 +296,7 @@ static int
 hdrbg_rand_(struct hdrbg_t *hd, uint64_t *r)
 {
     uint8_t value[8];
-    if(hdrbg_fill(hd, false, value, 8) < 8)
+    if(hdrbg_fill(hd, false, value, 8) < 0)
     {
         return -1;
     }

@@ -51,7 +51,7 @@ void tests(struct hdrbg_t *hd, FILE *tv)
     }
 
     // Bytes.
-    assert(hdrbg_fill(hd, false, NULL, 65537UL) == 0);
+    assert(hdrbg_fill(hd, false, NULL, 65537UL) == -1);
     assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_FILL);
     assert(hdrbg_err_get() == HDRBG_ERR_NONE);
 }
