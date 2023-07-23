@@ -2,7 +2,6 @@
 #include <Python.h>
 
 #include <inttypes.h>
-#include <limits.h>
 #include <stdbool.h>
 
 #include "hdrbg.h"
@@ -37,8 +36,14 @@ err_check(void)
         case HDRBG_ERR_INSUFFICIENT_ENTROPY:
             PyErr_Format(PyExc_RuntimeError, "insufficient entropy");
             return -1;
-        case HDRBG_ERR_INVALID_REQUEST:
-            PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [0, 65536]");
+        case HDRBG_ERR_INVALID_REQUEST_FILL:
+            PyErr_Format(PyExc_ValueError, "argument 1 must be less than or equal to 65536");
+            return -1;
+        case HDRBG_ERR_INVALID_REQUEST_UINT:
+            PyErr_Format(PyExc_ValueError, "argument 1 must be non-zero");
+            return -1;
+        case HDRBG_ERR_INVALID_REQUEST_SPAN:
+            PyErr_Format(PyExc_ValueError, "argument 1 must be less than argument 2");
             return -1;
         default:
             return 0;
@@ -49,12 +54,17 @@ err_check(void)
 static PyObject *
 Fill(PyObject *self, PyObject *args)
 {
-    Py_ssize_t r_length;
-    if(!PyArg_ParseTuple(args, "n", &r_length))
+    int long unsigned r_length;
+    if(!PyArg_ParseTuple(args, "k", &r_length))
     {
         return NULL;
     }
-    static uint8_t r_bytes[65536ULL];
+    r_length = PyLong_AsUnsignedLong(PyTuple_GET_ITEM(args, 0));
+    if(PyErr_Occurred() != NULL)
+    {
+        return PyErr_Format(PyExc_OverflowError, "argument 1 is out of range of `unsigned long`");
+    }
+    static uint8_t r_bytes[65536UL];
     hdrbg_fill(NULL, false, r_bytes, r_length);
     ERR_CHECK;
 
@@ -82,9 +92,9 @@ Uint(PyObject *self, PyObject *args)
         return NULL;
     }
     modulus = PyLong_AsUnsignedLongLong(PyTuple_GET_ITEM(args, 0));
-    if(PyErr_Occurred() != NULL || modulus == 0 || modulus > UINT64_MAX)
+    if(PyErr_Occurred() != NULL || modulus > UINT64_MAX)
     {
-        return PyErr_Format(PyExc_ValueError, "argument 1 must be an integer in [1, %llu]", UINT64_MAX);
+        return PyErr_Format(PyExc_OverflowError, "argument 1 is out of range of `uint64_t`");
     }
     uint64_t r = hdrbg_uint(NULL, modulus);
     ERR_CHECK;
@@ -105,13 +115,13 @@ Span(PyObject *self, PyObject *args)
             return NULL;
         }
     }
-    if(err != NULL || left < INT64_MIN || left > INT64_MAX || right < INT64_MIN || right > INT64_MAX || left >= right)
+    if(err != NULL)
     {
-        return PyErr_Format(
-            PyExc_ValueError,
-            "argument 1 must be less than argument 2; both must be integers in [%lld, %lld]",
-            INT64_MIN < LLONG_MIN ? LLONG_MIN : INT64_MIN, INT64_MAX
-        );
+        return PyErr_Format(PyExc_OverflowError, "argument 1 or argument 2 is out of range of `long long`");
+    }
+    else if(left < INT64_MIN || left > INT64_MAX || right < INT64_MIN || right > INT64_MAX)
+    {
+        return PyErr_Format(PyExc_OverflowError, "argument 1 or argument 2 is out of range of `int64_t`");
     }
     int64_t r = hdrbg_span(NULL, left, right);
     ERR_CHECK;

@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <hdrbg.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -13,8 +14,10 @@
  *****************************************************************************/
 void tests(struct hdrbg_t *hd, FILE *tv)
 {
+    // Internal.
     hdrbg_tests(hd, tv);
 
+    // Residue.
     for(int i = 0; i < 30000; ++i)
     {
         uint64_t r = hdrbg_rand(hd);
@@ -22,8 +25,12 @@ void tests(struct hdrbg_t *hd, FILE *tv)
         {
             assert(hdrbg_uint(hd, r) < r);
         }
+        assert(hdrbg_uint(hd, 0) == UINT64_MAX);
+        assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_UINT);
+        assert(hdrbg_err_get() == HDRBG_ERR_NONE);
     }
 
+    // Residue offset.
     for(int i = 0; i < 30000; ++i)
     {
         uint64_t uleft = hdrbg_rand(hd);
@@ -35,11 +42,17 @@ void tests(struct hdrbg_t *hd, FILE *tv)
             int64_t middle = hdrbg_span(hd, left, right);
             assert(left <= middle && middle < right);
         }
+        else
+        {
+            assert(hdrbg_span(hd, left, right) == -1);
+            assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_SPAN);
+            assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+        }
     }
 
-    size_t r_length = hdrbg_fill(hd, false, NULL, 65537ULL);
-    assert(r_length == 0);
-    assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST);
+    // Bytes.
+    assert(hdrbg_fill(hd, false, NULL, 65537ULL) == 0);
+    assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_FILL);
     assert(hdrbg_err_get() == HDRBG_ERR_NONE);
 }
 

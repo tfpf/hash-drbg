@@ -49,7 +49,9 @@ The type of the error indicator. It can take the following values.
 * `HDRBG_ERR_OUT_OF_MEMORY` Dynamic memory allocation failed.
 * `HDRBG_ERR_NO_ENTROPY` No entropy could be obtained from `/dev/urandom`.
 * `HDRBG_ERR_INSUFFICIENT_ENTROPY` Insufficient entropy was obtained from `/dev/urandom`.
-* `HDRBG_ERR_INVALID_REQUEST` The `r_length` argument of a call to `hdrbg_fill` was greater than 65536.
+* `HDRBG_ERR_INVALID_REQUEST_FILL` The `r_length` argument of a call to `hdrbg_fill` was greater than 65536.
+* `HDRBG_ERR_INVALID_REQUEST_UINT` The `modulus` argument of a call to `hdrbg_uint` was 0.
+* `HDRBG_ERR_INVALID_REQUEST_SPAN` The `right` argument of a call to `hdrbg_span` was less than or equal to `left`.
 
 # Functions
 ```C
@@ -64,11 +66,11 @@ may return `HDRBG_ERR_OUT_OF_MEMORY`, but the second call will return `HDRBG_ERR
 * → Error indicator.
 
 In theory, each of the below functions can error out, so a call to each of them should be followed by a call to this
-function to check for errors (and disambiguate the return value). Assume that any error other than
-`HDRBG_ERR_INVALID_REQUEST` leaves the pseudorandom number generator in an intermediate state, making it
-cryptographically insecure for further use.
+function to check for errors (and disambiguate the return value). Assume that any error other than the invalid request
+errors leaves the pseudorandom number generator in an intermediate state, making it cryptographically insecure for
+further use.
 
-In practice, on a modern system with loads of memory and entropy, `HDRBG_ERR_INVALID_REQUEST` is the only error which
+In practice, on a modern system with loads of memory and entropy, the invalid request errors are the only ones which
 you can realistically expect.
 
 ---
@@ -104,7 +106,7 @@ Reinitialise (reseed) an HDRBG object. If it had not been previously initialised
 ---
 
 ```C
-size_t hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length);
+int long unsigned hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length);
 ```
 Generate cryptographically secure pseudorandom bytes using an HDRBG object. If it had not been previously
 initialised/reinitialised, the behaviour is undefined.

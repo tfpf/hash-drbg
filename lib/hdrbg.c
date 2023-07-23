@@ -32,7 +32,7 @@ hdrbg_err = HDRBG_ERR_NONE;
 #define HDRBG_NONCE1_LENGTH 8
 #define HDRBG_NONCE2_LENGTH 8
 #define HDRBG_OUTPUT_LENGTH 32
-#define HDRBG_REQUEST_LIMIT (1ULL << 16)
+#define HDRBG_REQUEST_LIMIT (1UL << 16)
 #define HDRBG_RESEED_INTERVAL (1ULL << 48)
 
 // Characteristics of test vectors.
@@ -250,14 +250,14 @@ hdrbg_reinit(struct hdrbg_t *hd)
 /******************************************************************************
  * Generate cryptographically secure pseudorandom bytes.
  *****************************************************************************/
-size_t
-hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, size_t r_length)
+int long unsigned
+hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length)
 {
     if(r_length == 0 || r_length > HDRBG_REQUEST_LIMIT)
     {
         if(r_length > HDRBG_REQUEST_LIMIT)
         {
-            hdrbg_err = HDRBG_ERR_INVALID_REQUEST;
+            hdrbg_err = HDRBG_ERR_INVALID_REQUEST_FILL;
         }
         return 0;
     }
@@ -329,6 +329,11 @@ hdrbg_rand(struct hdrbg_t *hd)
 static int
 hdrbg_uint_(struct hdrbg_t *hd, uint64_t modulus, uint64_t *r)
 {
+    if(modulus == 0)
+    {
+        hdrbg_err = HDRBG_ERR_INVALID_REQUEST_UINT;
+        return -1;
+    }
     uint64_t upper = 0xFFFFFFFFFFFFFFFFU - 0xFFFFFFFFFFFFFFFFU % modulus;
     do
     {
@@ -362,6 +367,11 @@ hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus)
 int64_t
 hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
 {
+    if(left >= right)
+    {
+        hdrbg_err = HDRBG_ERR_INVALID_REQUEST_SPAN;
+        return -1;
+    }
     uint64_t uleft = left;
     uint64_t uright = right;
     uint64_t modulus = uright - uleft;
