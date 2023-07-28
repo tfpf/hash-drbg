@@ -45,13 +45,15 @@ The type of an HDRBG object. It is implemented as an opaque struct.
 enum hdrbg_err_t;
 ```
 The type of the error indicator. It can take the following values.
-* `HDRBG_ERR_NONE` No error.
-* `HDRBG_ERR_OUT_OF_MEMORY` Dynamic memory allocation failed.
-* `HDRBG_ERR_NO_ENTROPY` No entropy could be obtained from `/dev/urandom`.
-* `HDRBG_ERR_INSUFFICIENT_ENTROPY` Insufficient entropy was obtained from `/dev/urandom`.
-* `HDRBG_ERR_INVALID_REQUEST_FILL` The `r_length` argument of a call to `hdrbg_fill` was greater than 65536.
-* `HDRBG_ERR_INVALID_REQUEST_UINT` The `modulus` argument of a call to `hdrbg_uint` was 0.
-* `HDRBG_ERR_INVALID_REQUEST_SPAN` The `right` argument of a call to `hdrbg_span` was less than or equal to `left`.
+| Value                            | Description                                                                      |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `HDRBG_ERR_NONE`                 | No error.                                                                        |
+| `HDRBG_ERR_OUT_OF_MEMORY`        | Dynamic memory allocation failed.                                                |
+| `HDRBG_ERR_NO_ENTROPY`           | No entropy could be obtained from `/dev/urandom`.                                |
+| `HDRBG_ERR_INSUFFICIENT_ENTROPY` | Insufficient entropy was obtained from `/dev/urandom`.                           |
+| `HDRBG_ERR_INVALID_REQUEST_FILL` | The `r_length` argument of a call to `hdrbg_fill` was greater than 65536.        |
+| `HDRBG_ERR_INVALID_REQUEST_UINT` | The `modulus` argument of a call to `hdrbg_uint` was 0.                          |
+| `HDRBG_ERR_INVALID_REQUEST_SPAN` | The `right` argument of a call to `hdrbg_span` was less than or equal to `left`. |
 
 # Functions
 ```C
