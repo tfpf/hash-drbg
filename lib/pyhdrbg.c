@@ -2,6 +2,7 @@
 #include <Python.h>
 
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 
 #include "hdrbg.h"
@@ -48,6 +49,18 @@ err_check(void)
         default:
             return 0;
     }
+}
+
+
+static PyObject *
+Info(PyObject *self, PyObject *args)
+{
+    printf("ULONG_MAX = %+lu\n", ULONG_MAX);
+    printf("LLONG_MIN = %+lld\n", LLONG_MIN);
+    printf("LLONG_MAX = %+lld\n", LLONG_MAX);
+    printf("INT64_MIN = %+"PRId64"\n", INT64_MIN);
+    printf("INT64_MAX = %+"PRId64"\n", INT64_MAX);
+    Py_RETURN_NONE;
 }
 
 
@@ -147,6 +160,11 @@ Zero(void)
 
 // Module information.
 PyDoc_STRVAR(
+    info_doc,
+    "info()\n"
+    "Display the limits of some C integer types. May help debug ``OverflowError``s."
+);
+PyDoc_STRVAR(
     bytes_doc,
     "fill(r_length) -> bytes\n"
     "Generate cryptographically secure pseudorandom bytes.\n\n"
@@ -187,6 +205,7 @@ PyDoc_STRVAR(
 );
 static PyMethodDef pyhdrbg_methods[] =
 {
+    {"info", Info, METH_NOARGS, info_doc},
     {"fill", Fill, METH_VARARGS, bytes_doc},
     {"rand", Rand, METH_NOARGS, rand_doc},
     {"uint", Uint, METH_VARARGS, uint_doc},
