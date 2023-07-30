@@ -2,7 +2,6 @@
 #include <Python.h>
 
 #include <inttypes.h>
-#include <limits.h>
 #include <stdbool.h>
 
 #include "hdrbg.h"
@@ -55,11 +54,7 @@ err_check(void)
 static PyObject *
 Info(PyObject *self, PyObject *args)
 {
-    printf("ULONG_MAX = %+lu\n", ULONG_MAX);
-    printf("LLONG_MIN = %+lld\n", LLONG_MIN);
-    printf("LLONG_MAX = %+lld\n", LLONG_MAX);
-    printf("INT64_MIN = %+"PRId64"\n", INT64_MIN);
-    printf("INT64_MAX = %+"PRId64"\n", INT64_MAX);
+    hdrbg_info();
     Py_RETURN_NONE;
 }
 
@@ -162,7 +157,7 @@ Zero(void)
 PyDoc_STRVAR(
     info_doc,
     "info()\n"
-    "Display the limits of some C integer types. May help debug ``OverflowError``s."
+    "Display the limits of some C integer types. May help debug ``OverflowError``s raised by the Python API."
 );
 PyDoc_STRVAR(
     bytes_doc,

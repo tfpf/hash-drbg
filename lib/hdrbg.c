@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -60,6 +61,23 @@ hdrbg_err_get(void)
     enum hdrbg_err_t err = hdrbg_err;
     hdrbg_err = HDRBG_ERR_NONE;
     return err;
+}
+
+/******************************************************************************
+ * Display the limits of some C integer types.
+ *****************************************************************************/
+void
+hdrbg_info(void)
+{
+    int width = snprintf(NULL, 0, "%llu", ULLONG_MAX) + 1;
+    width = width < 21 ? 21 : width;
+    printf("ULONG_MAX  = %*lu\n", width, ULONG_MAX);
+    printf("ULLONG_MAX = %*llu\n", width, ULLONG_MAX);
+    printf("UINT64_MAX = %*"PRIu64"\n", width, UINT64_MAX);
+    printf("LLONG_MIN  = %+*lld\n", width, LLONG_MIN);
+    printf("LLONG_MAX  = %+*lld\n", width, LLONG_MAX);
+    printf("INT64_MIN  = %+*"PRId64"\n", width, INT64_MIN);
+    printf("INT64_MAX  = %+*"PRId64"\n", width, INT64_MAX);
 }
 
 /******************************************************************************

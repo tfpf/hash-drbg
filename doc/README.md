@@ -78,6 +78,17 @@ you can realistically expect.
 ---
 
 ```C
+void hdrbg_info(void);
+```
+Display the limits of some C integer types. May help debug `OverflowError`s raised by the Python API.
+
+| C              | Python Equivalent |
+| :------------: | :---------------: |
+| `hdrbg_info()` | `hdrbg.info()`    |
+
+---
+
+```C
 struct hdrbg_t *hdrbg_init(bool dma);
 ```
 Create and/or initialise (seed) an HDRBG object.

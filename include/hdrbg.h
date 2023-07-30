@@ -7,6 +7,7 @@
 #define uint8_t std::uint8_t
 #define uint64_t std::uint64_t
 #define size_t std::size_t
+#define int64_t std::int64_t
 #else
 #include <inttypes.h>
 #include <stdbool.h>
@@ -30,6 +31,7 @@ extern "C"
 {
 #endif
 enum hdrbg_err_t hdrbg_err_get(void);
+void hdrbg_info(void);
 struct hdrbg_t *hdrbg_init(bool dma);
 struct hdrbg_t *hdrbg_reinit(struct hdrbg_t *hd);
 int hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length);
@@ -48,6 +50,7 @@ void hdrbg_tests(struct hdrbg_t *hd, void *tv);
 #undef uint8_t
 #undef uint64_t
 #undef size_t
+#undef int64_t
 #endif
 
 #endif  // TFPF_HASH_DRBG_INCLUDE_HDRBG_H_
