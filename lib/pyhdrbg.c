@@ -2,6 +2,7 @@
 #include <Python.h>
 
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 
 #include "hdrbg.h"
@@ -48,14 +49,6 @@ err_check(void)
         default:
             return 0;
     }
-}
-
-
-static PyObject *
-Info(PyObject *self, PyObject *args)
-{
-    hdrbg_info();
-    Py_RETURN_NONE;
 }
 
 
@@ -155,11 +148,6 @@ Zero(void)
 
 // Module information.
 PyDoc_STRVAR(
-    info_doc,
-    "info()\n"
-    "Display the limits of some C integer types. May help debug ``OverflowError``s raised by the Python API."
-);
-PyDoc_STRVAR(
     bytes_doc,
     "fill(r_length) -> bytes\n"
     "Generate cryptographically secure pseudorandom bytes.\n\n"
@@ -200,7 +188,6 @@ PyDoc_STRVAR(
 );
 static PyMethodDef pyhdrbg_methods[] =
 {
-    {"info", Info, METH_NOARGS, info_doc},
     {"fill", Fill, METH_VARARGS, bytes_doc},
     {"rand", Rand, METH_NOARGS, rand_doc},
     {"uint", Uint, METH_VARARGS, uint_doc},
@@ -233,5 +220,20 @@ PyInit_hdrbg(void)
     {
         return NULL;
     }
-    return PyModule_Create(&pyhdrbg);
+
+    PyObject *ulong_max = PyLong_FromUnsignedLong(ULONG_MAX);
+    PyObject *ullong_max = PyLong_FromUnsignedLongLong(ULLONG_MAX);
+    PyObject *llong_min = PyLong_FromLongLong(LLONG_MIN);
+    PyObject *llong_max = PyLong_FromLongLong(LLONG_MAX);
+    PyObject *pyhdrbg_module = PyModule_Create(&pyhdrbg);
+    PyObject *pyhdrbg_dict = PyModule_GetDict(pyhdrbg_module);
+    PyDict_SetItemString(pyhdrbg_dict, "ULONG_MAX", ulong_max);
+    PyDict_SetItemString(pyhdrbg_dict, "ULLONG_MAX", ullong_max);
+    PyDict_SetItemString(pyhdrbg_dict, "LLONG_MIN", llong_min);
+    PyDict_SetItemString(pyhdrbg_dict, "LLONG_MAX", llong_max);
+    Py_DECREF(ulong_max);
+    Py_DECREF(ullong_max);
+    Py_DECREF(llong_min);
+    Py_DECREF(llong_max);
+    return pyhdrbg_module;
 }

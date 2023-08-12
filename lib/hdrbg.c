@@ -64,32 +64,6 @@ hdrbg_err_get(void)
 }
 
 /******************************************************************************
- * Display the limits of some C integer types.
- *****************************************************************************/
-void
-hdrbg_info(void)
-{
-    // Counting digits is faster than converting the number into a string and
-    // counting characters. I could use macros to stringify it and count the
-    // characters at compile time, but the macro may expand to an expression
-    // containing arithmetic operations.
-    int width = 0;
-    for(int long long unsigned n = ULLONG_MAX; n > 0; n /= 10)
-    {
-        ++width;
-    }
-    width = width < 21 ? 21 : width;
-
-    printf("ULONG_MAX  = %*lu\n", width, ULONG_MAX);
-    printf("ULLONG_MAX = %*llu\n", width, ULLONG_MAX);
-    printf("UINT64_MAX = %*"PRIu64"\n", width, UINT64_MAX);
-    printf("LLONG_MIN  = %+*lld\n", width, LLONG_MIN);
-    printf("LLONG_MAX  = %+*lld\n", width, LLONG_MAX);
-    printf("INT64_MIN  = %+*"PRId64"\n", width, INT64_MIN);
-    printf("INT64_MAX  = %+*"PRId64"\n", width, INT64_MAX);
-}
-
-/******************************************************************************
  * Add two numbers. Overwrite the first number with the result, disregarding
  * any carried bytes.
  *
