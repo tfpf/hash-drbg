@@ -53,6 +53,24 @@ err_check(void)
 
 
 static PyObject *
+Init(PyObject *self, PyObject *args)
+{
+    hdrbg_init(false);
+    ERR_CHECK;
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+Reinit(PyObject *self, PyObject *args)
+{
+    hdrbg_reinit(NULL);
+    ERR_CHECK;
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Fill(PyObject *self, PyObject *args)
 {
     int long unsigned r_length;
@@ -148,6 +166,16 @@ Zero(void)
 
 // Module information.
 PyDoc_STRVAR(
+    init_doc,
+    "_init()\n"
+    "Initialise (seed) the HDRBG object."
+);
+PyDoc_STRVAR(
+    reinit_doc,
+    "_reinit()\n"
+    "Reinitialise (reseed) the HDRBG object."
+);
+PyDoc_STRVAR(
     bytes_doc,
     "fill(r_length) -> bytes\n"
     "Generate cryptographically secure pseudorandom bytes.\n\n"
@@ -188,6 +216,8 @@ PyDoc_STRVAR(
 );
 static PyMethodDef pyhdrbg_methods[] =
 {
+    {"_init", Init, METH_NOARGS, init_doc},
+    {"_reinit", Reinit, METH_NOARGS, reinit_doc},
     {"fill", Fill, METH_VARARGS, bytes_doc},
     {"rand", Rand, METH_NOARGS, rand_doc},
     {"uint", Uint, METH_VARARGS, uint_doc},
@@ -212,10 +242,8 @@ static PyModuleDef pyhdrbg =
 PyMODINIT_FUNC
 PyInit_hdrbg(void)
 {
-    if(hdrbg_init(false) == NULL)
-    {
-        ERR_CHECK;
-    }
+    hdrbg_init(false);
+    ERR_CHECK;
     if(Py_AtExit(Zero) < 0)
     {
         return NULL;

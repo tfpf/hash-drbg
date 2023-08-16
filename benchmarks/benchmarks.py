@@ -17,6 +17,8 @@ def benchmark(stmt, number, passes=32):
 
 def main():
     """Main function."""
+    benchmark(hdrbg._init, 100)
+    benchmark(hdrbg._reinit, 100)
     benchmark(hdrbg.rand, 800)
     benchmark(hdrbg.real, 800)
 
