@@ -251,16 +251,22 @@ PyInit_hdrbg(void)
 
     PyObject *ulong_max = PyLong_FromUnsignedLong(ULONG_MAX);
     PyObject *ullong_max = PyLong_FromUnsignedLongLong(ULLONG_MAX);
+    PyObject *long_min = PyLong_FromLong(LONG_MIN);
+    PyObject *long_max = PyLong_FromLong(LONG_MAX);
     PyObject *llong_min = PyLong_FromLongLong(LLONG_MIN);
     PyObject *llong_max = PyLong_FromLongLong(LLONG_MAX);
     PyObject *pyhdrbg_module = PyModule_Create(&pyhdrbg);
     PyObject *pyhdrbg_dict = PyModule_GetDict(pyhdrbg_module);
     PyDict_SetItemString(pyhdrbg_dict, "ULONG_MAX", ulong_max);
     PyDict_SetItemString(pyhdrbg_dict, "ULLONG_MAX", ullong_max);
+    PyDict_SetItemString(pyhdrbg_dict, "LONG_MIN", long_min);
+    PyDict_SetItemString(pyhdrbg_dict, "LONG_MAX", long_max);
     PyDict_SetItemString(pyhdrbg_dict, "LLONG_MIN", llong_min);
     PyDict_SetItemString(pyhdrbg_dict, "LLONG_MAX", llong_max);
     Py_DECREF(ulong_max);
     Py_DECREF(ullong_max);
+    Py_DECREF(long_min);
+    Py_DECREF(long_max);
     Py_DECREF(llong_min);
     Py_DECREF(llong_max);
     return pyhdrbg_module;
