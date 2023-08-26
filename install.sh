@@ -8,5 +8,5 @@ then
 fi
 case $(uname 2>/dev/null) in
     MINGW* | MSYS*) make --jobs=4 "$@" install;;
-    Linux) sudo make --jobs=4 "$@" install;;
+    Linux | Darwin) sudo make --jobs=4 "$@" install;;
 esac
