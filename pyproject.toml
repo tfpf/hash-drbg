@@ -20,9 +20,3 @@ classifiers = [
 [project.urls]
 'Homepage' = 'https://github.com/tfpf/hash-drbg'
 'Bug Tracker' = 'https://github.com/tfpf/hash-drbg/issues'
-
-[tool.setuptools]
-package-dir = {'' = './lib'}
-
-[tool.setuptools.packages.find]
-where = ['./lib']

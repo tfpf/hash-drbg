@@ -3,16 +3,16 @@ LDFLAGS = -shared
 
 Prefix = /usr
 Package = hdrbg
-Header = ./include/$(Package).h
+Header = include/$(Package).h
 HeaderDestination = $(Prefix)/include/$(Package).h
 Sources = $(filter-out lib/pyhdrbg.c, $(wildcard lib/*.c))
 Objects = $(Sources:.c=.o)
 ifeq ($(OS), Windows_NT)
-Library = ./lib/$(Package).dll
+Library = lib/$(Package).dll
 LibraryDestination = $(Prefix)/lib/$(Package).dll
 LibraryDestinationWindows = $(Prefix)/bin/$(Package).dll
 else
-Library = ./lib/$(Package).so
+Library = lib/$(Package).so
 LibraryDestination = $(Prefix)/lib/lib$(Package).so
 endif
 
