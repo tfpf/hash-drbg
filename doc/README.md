@@ -122,6 +122,8 @@ initialised/reinitialised, the behaviour is undefined.
   * On success: 0.
   * On failure: −1.
 
+If `r_length` is 0, `r_bytes` will not be modified, but the state of the HDRBG object will be advanced.
+
 | C                                            | Python Equivalent      |
 | :------------------------------------------: | :--------------------: |
 | `hdrbg_fill(NULL, false, r_bytes, r_length)` | `hdrbg.fill(r_length)` |

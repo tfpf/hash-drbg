@@ -259,10 +259,6 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int
         hdrbg_err = HDRBG_ERR_INVALID_REQUEST_FILL;
         return -1;
     }
-    if(r_length == 0)
-    {
-        return 0;
-    }
     hd = hd == NULL ? &hdrbg : hd;
     if(prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
     {
@@ -271,7 +267,10 @@ hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int
             return -1;
         }
     }
-    hash_gen(hd->V + 1, r_bytes, r_length);
+    if(r_length > 0)
+    {
+        hash_gen(hd->V + 1, r_bytes, r_length);
+    }
 
     // Mutate the state.
     hd->V[0] = 0x03U;
