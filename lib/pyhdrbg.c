@@ -157,6 +157,29 @@ Real(PyObject *self, PyObject *args)
 }
 
 
+static PyObject *
+Drop(PyObject *self, PyObject *args)
+{
+    int long long count;
+    PyObject *err = NULL;
+    if(!PyArg_ParseTuple(args, "L", &count))
+    {
+        err = PyErr_Occurred();
+        if(!PyErr_GivenExceptionMatches(err, PyExc_OverflowError))
+        {
+            return NULL;
+        }
+    }
+    if(err != NULL)
+    {
+        return PyErr_Format(PyExc_OverflowError, "argument 1 is out of range of `long long`");
+    }
+    hdrbg_drop(NULL, count);
+    ERR_CHECK;
+    Py_RETURN_NONE;
+}
+
+
 static void
 Zero(void)
 {
@@ -210,6 +233,12 @@ PyDoc_STRVAR(
     ":return: Uniform pseudorandom real in the range 0 (inclusive) to 1 (inclusive)."
 );
 PyDoc_STRVAR(
+    drop_doc,
+    "drop()\n"
+    "Advance the state of the HDRBG object. Equivalent to running ``fill(0)`` ``count`` times and discarding the "
+    "results."
+);
+PyDoc_STRVAR(
     pyhdrbg_doc,
     "Python API for a C implementation of Hash DRBG "
     "(see https://github.com/tfpf/hash-drbg/blob/main/doc for the full documentation)"
@@ -223,6 +252,7 @@ static PyMethodDef pyhdrbg_methods[] =
     {"uint", Uint, METH_VARARGS, uint_doc},
     {"span", Span, METH_VARARGS, span_doc},
     {"real", Real, METH_NOARGS, real_doc},
+    {"drop", Drop, METH_VARARGS, drop_doc},
     {NULL, NULL, 0, NULL},
 };
 static PyModuleDef pyhdrbg =

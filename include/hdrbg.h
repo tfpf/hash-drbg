@@ -38,6 +38,7 @@ uint64_t hdrbg_rand(struct hdrbg_t *hd);
 uint64_t hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus);
 int64_t hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right);
 double long hdrbg_real(struct hdrbg_t *hd);
+int hdrbg_drop(struct hdrbg_t *hd, int long long count);
 void hdrbg_zero(struct hdrbg_t *hd);
 void hdrbg_dump(uint8_t const *m_bytes, size_t m_length);
 void hdrbg_tests(struct hdrbg_t *hd, void *tv);

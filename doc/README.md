@@ -122,7 +122,7 @@ initialised/reinitialised, the behaviour is undefined.
   * On success: 0.
   * On failure: −1.
 
-If `r_length` is 0, `r_bytes` will not be modified, but the state of the HDRBG object will be advanced.
+Calling this function will change the state of the HDRBG object. (Even if `r_length` is 0.)
 
 | C                                            | Python Equivalent      |
 | :------------------------------------------: | :--------------------: |
@@ -198,6 +198,19 @@ resistance.
 | C                  | Python Equivalent |
 | :----------------: | :---------------: |
 | `hdrbg_real(NULL)` | `hdrbg.real()`    |
+
+---
+
+```C
+int hdrbg_drop(struct hdrbg_t *hd, int long long count);
+```
+Advance the state of an HDRBG object. Equivalent to running `hdrbg_fill(hd, false, NULL, 0)` `count` times and
+discarding the results.
+* `hd` HDRBG object to use. If `NULL`, the internal HDRBG object will be used.
+* `count` Number times to advance the state. If not positive, this function has no effect.
+* →
+  * On success: 0.
+  * On failure: −1.
 
 ---
 

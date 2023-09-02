@@ -406,6 +406,22 @@ hdrbg_real(struct hdrbg_t *hd)
 }
 
 /******************************************************************************
+ * Advance the state of an HDRBG object.
+ *****************************************************************************/
+int
+hdrbg_drop(struct hdrbg_t *hd, int long long count)
+{
+    while(count-- > 0)
+    {
+        if(hdrbg_fill(hd, false, NULL, 0) < 0)
+        {
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/******************************************************************************
  * Clear (zero) and/or destroy an HDRBG object.
  *****************************************************************************/
 void
