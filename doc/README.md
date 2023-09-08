@@ -212,6 +212,10 @@ discarding the results.
   * On success: 0.
   * On failure: −1.
 
+| C                         | Python Equivalent   |
+| :-----------------------: | :-----------------: |
+| `hdrbg_drop(NULL, count)` | `hdrbg.drop(count)` |
+
 ---
 
 ```C
