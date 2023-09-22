@@ -1,0 +1,12 @@
+name: functest
+
+on: [push, workflow_dispatch]
+
+jobs:
+  functest:
+    name: Functional Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./install.sh
+      - run: make tests
