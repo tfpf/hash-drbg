@@ -26,7 +26,7 @@ On Windows, these are available natively via [MSYS2](https://www.msys2.org) and 
 [WSL](https://learn.microsoft.com/en-us/windows/wsl/about). On macOS, they can be installed using
 [Homebrew](https://brew.sh/); however, their Apple-specific variants provided by
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine. I am fairly sure that this will work on
-macOS, though I don't have a Mac to test it.
+macOS, though I don't have a Mac to test it. (I'm trying to figure out how to use a macOS runner on GitHub Actions.)
 
 The installation commands mentioned below must be entered in
 * the terminal if you are on Linux/macOS, or

@@ -2,10 +2,17 @@ name: functest
 
 on: [push, workflow_dispatch]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   functest:
     name: Functional Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-12, ubuntu-22.04]
     steps:
       - uses: actions/checkout@v4
       - run: ./install.sh
