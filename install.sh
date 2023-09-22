@@ -6,7 +6,9 @@ then
     git clone https://github.com/tfpf/hash-drbg.git $target
     cd $target
 fi
-case $(uname 2>/dev/null) in
+os=$(uname 2>/dev/null)
+printf "Detected: '$os'\n"
+case $os in
     (MINGW* | MSYS*) make --jobs=4 "$@" install;;
     (Linux | Darwin) sudo make --jobs=4 "$@" install;;
 esac
