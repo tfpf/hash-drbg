@@ -1,6 +1,6 @@
 #! /usr/bin/env sh
 
-if [ "$1" = uninstall ]
+if [ "$1" = rm ]
 then
     im=build/install_manifest.txt
     if [ ! -f $im ]
@@ -10,7 +10,7 @@ then
     fi
     while read fname
     do
-        sudo rm $fname
+        sudo rm -v $fname
     done < $im
     exit
 fi
@@ -24,4 +24,6 @@ fi
 mkdir -p build && cd build
 cmake ..
 sudo make --jobs=4 install
-sudo ldconfig
+case $(uname 2>/dev/null) in
+    (Linux) sudo ldconfig;;
+esac
