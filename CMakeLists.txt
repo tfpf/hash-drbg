@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.18)
 cmake_policy(SET CMP0048 NEW)
 project(hdrbg VERSION 1.0.0 DESCRIPTION "C implementation of Hash DRBG")
 include(GNUInstallDirs)
