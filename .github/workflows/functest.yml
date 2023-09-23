@@ -16,4 +16,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ./install.sh
-      - run: make tests
+      - run: cd tests && make && ./tests
