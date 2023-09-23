@@ -15,6 +15,7 @@ analysis, go to [`benchmarks`](benchmarks).
 ## Installation Requirements
 These are the versions I have tested the installation with. Older versions may also work. You may not need all of
 these, depending on how and what you are installing
+* CMake ≥ 3.22
 * cURL ≥ 7.68.0
 * GCC ≥ 9.4.0 or Clang ≥ 12.0.0
 * Git ≥ 2.30.2
@@ -34,13 +35,13 @@ The installation commands mentioned below must be entered in
 
 ## Install for C (and C++)
 ```shell
-curl https://raw.githubusercontent.com/tfpf/hash-drbg/main/install.sh | sh
+curl https://raw.githubusercontent.com/tfpf/hash-drbg/main/run.sh | sh
 ```
 or
 ```shell
 git clone https://github.com/tfpf/hash-drbg.git
 cd hash-drbg
-./install.sh
+./run.sh
 ```
 
 ### Quick Start

@@ -15,5 +15,5 @@ jobs:
         os: [macos-12, ubuntu-22.04, windows-2022]
     steps:
       - uses: actions/checkout@v4
-      - run: ./install.sh
+      - run: ./run.sh
       - run: cd tests && make && ./tests
