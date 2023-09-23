@@ -22,12 +22,14 @@ these, depending on how and what you are installing
 * GNU Make ≥ 4.2.1
 * CPython ≥ 3.8 and its C headers and library
 * pip ≥ 23.0
+* pkg-config ≥ 0.29.2
 
 On Windows, these are available natively via [MSYS2](https://www.msys2.org) and in a Linux environment via
 [WSL](https://learn.microsoft.com/en-us/windows/wsl/about). On macOS, they can be installed using
 [Homebrew](https://brew.sh/); however, their Apple-specific variants provided by
-[Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine. I am fairly sure that this will work on
-macOS, though I don't have a Mac to test it. (I'm trying to figure out how to use a macOS runner on GitHub Actions.)
+[Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine. I don't have a Mac to confirm this, but …
+
+![functest](https://github.com/tfpf/hash-drbg/actions/workflows/functest.yml/badge.svg)
 
 The installation commands mentioned below must be entered in
 * the terminal if you are on Linux/macOS, or
