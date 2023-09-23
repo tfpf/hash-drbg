@@ -29,7 +29,7 @@ On Windows, these are available natively via [MSYS2](https://www.msys2.org) and 
 [Homebrew](https://brew.sh/); however, their Apple-specific variants provided by
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine.
 
-![functest](https://github.com/tfpf/hash-drbg/actions/workflows/functest.yml/badge.svg)
+![build-functest](https://github.com/tfpf/hash-drbg/actions/workflows/build-functest.yml/badge.svg)
 
 The installation commands mentioned below must be entered in
 * the terminal if you are on Linux/macOS, or
