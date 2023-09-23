@@ -3,7 +3,6 @@ cmake_policy(SET CMP0048 NEW)
 project(hdrbg VERSION 1.0.0 DESCRIPTION "C implementation of Hash DRBG")
 include(GNUInstallDirs)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)

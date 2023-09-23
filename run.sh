@@ -24,3 +24,4 @@ fi
 mkdir -p build && cd build
 cmake ..
 sudo make --jobs=4 install
+sudo ldconfig
