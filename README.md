@@ -47,6 +47,9 @@ cd hash-drbg
 ./run.sh
 ```
 
+If your system provides pkg-config via pkgconf, you may have to add the directory containing `hdrbg.pc` (which, by
+default, is `/usr/local/share/pkgconfig`) to `PKG_CONFIG_PATH`.
+
 ### Quick Start
 Put the following code in a file `example.c`:
 ```C
