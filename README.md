@@ -29,8 +29,7 @@ On Windows, these are available natively via [MSYS2](https://www.msys2.org) and 
 [Homebrew](https://brew.sh/); however, their Apple-specific variants provided by
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine.
 
-![C: Build, Test](https://github.com/tfpf/hash-drbg/actions/workflows/c-build-test.yml/badge.svg)
-![Python: Build](https://github.com/tfpf/hash-drbg/actions/workflows/python-build.yml/badge.svg)
+![unix-build](https://github.com/tfpf/hash-drbg/actions/workflows/unix-build.yml/badge.svg)
 
 The installation commands mentioned below must be entered in
 * the terminal if you are on Linux/macOS, or
