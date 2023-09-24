@@ -65,7 +65,7 @@ int main(void)
 ```
 compile it with
 ```
-gcc $(pkg-config --cflags --libs-only-L hdrbg) example.c -lhdrbg -o example
+gcc example.c -o example $(pkg-config --cflags --libs hdrbg)
 ```
 and run it using
 ```sh
