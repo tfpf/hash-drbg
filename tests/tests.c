@@ -6,6 +6,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef __STDC_NO_THREADS__
+#include <threads.h>
+#endif
+
+#define WORKERS_SIZE 8
+#define CUSTOM_ITERATIONS (1L << 16)
+
+/******************************************************************************
+ * Ad hoc verification.
+ *
+ * @param hd_ HDRBG object.
+ *
+ * @return Ignored.
+ *****************************************************************************/
+int hdrbg_tests_custom(void *hd_)
+{
+    struct hdrbg_t *hd = hd_;
+    for(int long i = 0; i < CUSTOM_ITERATIONS; ++i)
+    {
+        uint64_t r = hdrbg_rand(hd);
+        if(r > 0)
+        {
+            assert(hdrbg_uint(hd, r) < r);
+            assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+        }
+        assert(hdrbg_uint(hd, 0) == UINT64_MAX);
+        assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_UINT);
+        assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+    }
+    for(int long i = 0; i < CUSTOM_ITERATIONS; ++i)
+    {
+        uint64_t uleft = hdrbg_rand(hd);
+        int64_t left = *(int64_t *)&uleft;
+        uint64_t uright = hdrbg_rand(hd);
+        int64_t right = *(int64_t *)&uright;
+        int64_t middle = hdrbg_span(hd, left, right);
+        if(left < right)
+        {
+            assert(left <= middle && middle < right);
+        }
+        else
+        {
+            assert(middle == -1);
+            assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_SPAN);
+        }
+        assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+    }
+    assert(hdrbg_fill(hd, false, NULL, 65537UL) == -1);
+    assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_FILL);
+    assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+    return 0;
+}
+
 /******************************************************************************
  * Test a particular HDRBG object.
  *
@@ -14,46 +67,21 @@
  *****************************************************************************/
 void tests(struct hdrbg_t *hd, FILE *tv)
 {
-    // Internal.
     hdrbg_tests(hd, tv);
 
-    // Residue.
-    for(int i = 0; i < 30000; ++i)
+    #ifndef __STDC_NO_THREADS__
+    thrd_t workers[WORKERS_SIZE];
+    for(int i = 0; i < WORKERS_SIZE; ++i)
     {
-        uint64_t r = hdrbg_rand(hd);
-        if(r > 0)
-        {
-            assert(hdrbg_uint(hd, r) < r);
-        }
-        assert(hdrbg_uint(hd, 0) == UINT64_MAX);
-        assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_UINT);
-        assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+        thrd_create(workers + i, hdrbg_tests_custom, hd);
     }
-
-    // Residue offset.
-    for(int i = 0; i < 30000; ++i)
+    for(int i = 0; i < WORKERS_SIZE; ++i)
     {
-        uint64_t uleft = hdrbg_rand(hd);
-        int64_t left = *(int64_t *)&uleft;
-        uint64_t uright = hdrbg_rand(hd);
-        int64_t right = *(int64_t *)&uright;
-        if(left < right)
-        {
-            int64_t middle = hdrbg_span(hd, left, right);
-            assert(left <= middle && middle < right);
-        }
-        else
-        {
-            assert(hdrbg_span(hd, left, right) == -1);
-            assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_SPAN);
-            assert(hdrbg_err_get() == HDRBG_ERR_NONE);
-        }
+        thrd_join(workers[i], NULL);
     }
-
-    // Bytes.
-    assert(hdrbg_fill(hd, false, NULL, 65537UL) == -1);
-    assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_FILL);
-    assert(hdrbg_err_get() == HDRBG_ERR_NONE);
+    #else
+    hdrbg_tests_custom(hd);
+    #endif
 }
 
 /******************************************************************************
