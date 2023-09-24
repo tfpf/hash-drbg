@@ -8,10 +8,7 @@ then
         printf "Cannot find install manifest!\n" >&2
         exit 1
     fi
-    while read fname
-    do
-        sudo rm -v $fname
-    done < $im
+    sudo rm -v $(cat build/install_manifest.txt)
     exit
 fi
 
@@ -23,7 +20,7 @@ then
 fi
 mkdir -p build && cd build
 cmake ..
-sudo make --jobs=4 install
+sudo make -j install
 case $(uname 2>/dev/null) in
     (Linux) sudo ldconfig;;
 esac
