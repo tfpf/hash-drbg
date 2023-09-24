@@ -1,14 +1,11 @@
-name: build-functest
-
+name: c-build-test
 on: [push, workflow_dispatch]
-
 defaults:
   run:
     shell: bash
 
 jobs:
-  build-functest:
-    name: Build, Functional Test
+  c-build-test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

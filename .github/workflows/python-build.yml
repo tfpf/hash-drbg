@@ -1,0 +1,16 @@
+name: python-build
+on: [push, workflow_dispatch]
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  python-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-12, ubuntu-22.04]
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install .
+      - run: python3 examples/Python/thread-safe.py
