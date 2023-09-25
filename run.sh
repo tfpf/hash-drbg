@@ -1,5 +1,11 @@
 #! /usr/bin/env sh
 
+os=$(uname 2>/dev/null)
+case $os in
+    (Darwin | Linux) SUDO=sudo;;
+esac
+
+# Uninstall.
 if [ "$1" = rm ]
 then
     im=build/install_manifest.txt
@@ -8,10 +14,11 @@ then
         printf "Cannot find install manifest!\n" >&2
         exit 1
     fi
-    sudo rm -v $(cat build/install_manifest.txt)
+    $SUDO rm -v $(cat build/install_manifest.txt)
     exit
 fi
 
+# Install.
 if [ "$0" = sh ]
 then
     target=/tmp/hash-drbg-$(date +%s)
@@ -20,7 +27,9 @@ then
 fi
 mkdir -p build && cd build
 cmake ..
-sudo make -j install
-case $(uname 2>/dev/null) in
+cmake --build . --parallel
+$SUDO cmake --install .
+
+case $os in
     (Linux) sudo ldconfig;;
 esac
