@@ -16,13 +16,13 @@ analysis, go to [`benchmarks`](benchmarks).
 These are the versions I have tested the installation with. Older versions may also work. You may not need all of
 these, depending on how and what you are installing
 * CMake ≥ 3.22
+* CPython ≥ 3.8 and its C headers and library
 * cURL ≥ 7.68.0
 * GCC ≥ 9.4.0 or Clang ≥ 12.0.0
 * Git ≥ 2.30.2
 * GNU Make ≥ 4.2.1
-* CPython ≥ 3.8 and its C headers and library
 * pip ≥ 23.0
-* pkg-config ≥ 0.29.2
+* pkg-config ≥ 0.29.2 or pkgconf ≥ 1.8.0
 
 On Windows, these are available natively via [MSYS2](https://www.msys2.org) and in a Linux environment via
 [WSL](https://learn.microsoft.com/en-us/windows/wsl/about). On macOS, they can be installed using
@@ -30,10 +30,6 @@ On Windows, these are available natively via [MSYS2](https://www.msys2.org) and 
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine.
 
 ![unix-build](https://github.com/tfpf/hash-drbg/actions/workflows/unix-build.yml/badge.svg)
-
-The installation commands mentioned below must be entered in
-* the terminal if you are on Linux/macOS, or
-* the MSYS2 terminal or WSL terminal if you are on Windows.
 
 ## Install for C (and C++)
 ```shell
@@ -46,8 +42,12 @@ cd hash-drbg
 ./run.sh
 ```
 
-If your system provides pkg-config via pkgconf, you may have to add the directory containing `hdrbg.pc` (which, by
+If your system provides `pkg-config` via pkgconf, you may have to add the directory containing `hdrbg.pc` (which, by
 default, is `/usr/local/share/pkgconfig`) to `PKG_CONFIG_PATH`.
+
+```shell
+export PKG_CONFIG_PATH=/usr/local/share/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
+```
 
 ### Quick Start
 Put the following code in a file `example.c`:
@@ -85,5 +85,3 @@ git clone https://github.com/tfpf/hash-drbg.git
 cd hash-drbg
 pip install .
 ```
-
-This does not currently work on MSYS2.
