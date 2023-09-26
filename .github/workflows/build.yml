@@ -19,7 +19,7 @@ jobs:
         uses: cygwin/cygwin-install-action@v4
         with:
           packages: cmake gcc-g++ make
-      - run: find .
+      - run: find $PWD -name extras.c
       - run: ./run.sh
       - run: cd tests && make && ./tests
   python:
