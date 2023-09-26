@@ -3,6 +3,8 @@ on: [push, workflow_dispatch]
 defaults:
   run:
     shell: bash
+env:
+  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
 
 jobs:
   c:
@@ -16,7 +18,8 @@ jobs:
       - if: runner.os == 'Windows'
         uses: cygwin/cygwin-install-action@v4
         with:
-          packages: cmake gcc-g++ make python3 python3-devel python3-pip
+          packages: cmake gcc-g++ make
+      - run: find .
       - run: ./run.sh
       - run: cd tests && make && ./tests
   python:
@@ -30,6 +33,6 @@ jobs:
       - if: runner.os == 'Windows'
         uses: cygwin/cygwin-install-action@v4
         with:
-          packages: cmake gcc-g++ make python3 python3-devel python3-pip
+          packages: gcc-g++ python3 python3-devel python3-pip
       - run: python3 -m pip install .
       - run: python3 examples/Python/thread-safe.py
