@@ -9,9 +9,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-12, ubuntu-22.04]
+        os: [macos-12, ubuntu-22.04, windows-2022]
     steps:
+      - run: git config --global core.autocrlf input
       - uses: actions/checkout@v4
+      - if: runner.os == 'Windows'
+        uses: cygwin/cygwin-install-action@v4
+        with:
+          packages: cmake gcc-g++ make python3 python3-devel python3-pip
       - run: ./run.sh
       - run: cd tests && make && ./tests
   python:
