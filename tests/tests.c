@@ -6,10 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef __STDC_NO_THREADS__
-#include <threads.h>
-#endif
-
 #define WORKERS_SIZE 8
 #define CUSTOM_ITERATIONS (1L << 16)
 
@@ -68,20 +64,7 @@ int hdrbg_tests_custom(void *hd_)
 void tests(struct hdrbg_t *hd, FILE *tv)
 {
     hdrbg_tests(hd, tv);
-
-    #ifndef __STDC_NO_THREADS__
-    thrd_t workers[WORKERS_SIZE];
-    for(int i = 0; i < WORKERS_SIZE; ++i)
-    {
-        thrd_create(workers + i, hdrbg_tests_custom, hd);
-    }
-    for(int i = 0; i < WORKERS_SIZE; ++i)
-    {
-        thrd_join(workers[i], NULL);
-    }
-    #else
     hdrbg_tests_custom(hd);
-    #endif
 }
 
 /******************************************************************************

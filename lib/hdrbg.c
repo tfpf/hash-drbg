@@ -20,7 +20,7 @@ static int long long unsigned
 #endif
 seq_num = 0;
 
-#ifndef __STDC_NO_THREADS__
+#if !(defined __STDC_NO_THREADS__ || defined _WIN32)
 #include <threads.h>
 static thread_local enum hdrbg_err_t
 #else

@@ -1,0 +1,17 @@
+name: windows-build
+on: [push, workflow_dispatch]
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  python:
+    runs-on: windows-2022
+    steps:
+      - run: git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - uses: cygwin/cygwin-install-action@v4
+        with:
+          packages: cmake gcc-g++ make python3 python3-devel python3-pip
+      - run: python3 -m pip install .
+      - run: python3 examples/Python/thread-safe.py
