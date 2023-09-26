@@ -29,3 +29,7 @@ mkdir -p build && cd build
 cmake ..
 cmake --build . --parallel
 $SUDO cmake --install .
+
+case $os in
+    (Linux) sudo ldconfig;;
+esac
