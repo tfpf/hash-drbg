@@ -24,12 +24,13 @@ these, depending on how and what you are installing
 * pip ≥ 23.0
 * pkg-config ≥ 0.29.2 or pkgconf ≥ 1.8.0
 
-On Windows, these are available natively via [MSYS2](https://www.msys2.org) and in a Linux environment via
+On Windows, these are available natively via [MSYS2](https://www.msys2.org) (not recommended) and
+[Cygwin](https://www.cygwin.com), and in a Linux environment via
 [WSL](https://learn.microsoft.com/en-us/windows/wsl/about). On macOS, they can be installed using
-[Homebrew](https://brew.sh/); however, their Apple-specific variants provided by
+[Homebrew](https://brew.sh); however, their Apple-specific variants provided by
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine.
 
-![unix-build](https://github.com/tfpf/hash-drbg/actions/workflows/unix-build.yml/badge.svg)
+![build](https://github.com/tfpf/hash-drbg/actions/workflows/build.yml/badge.svg)
 
 ## Install for C (and C++)
 ```shell
