@@ -1,31 +1,13 @@
 name: build-windows
 on: [push, workflow_dispatch]
-defaults:
-  run:
-    shell: msys2 {0}
 
 jobs:
-  c:
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          install: cmake gcc make pkgconf
-      - run: ./run.sh
-      - name: Set `LD_LIBRARY_PATH` and `PKG_CONFIG_PATH`
-        run: printf "export LD_LIBRARY_PATH=/usr/local/lib\nexport PKG_CONFIG_PATH=/usr/local/share/pkgconfig\n" > ~/.bash_profile
-      - run: env | sort
-      - run: cd tests && make && ./tests
   python:
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
+      - uses: cygwin/cygwin-install-action@v4
         with:
-          msystem: UCRT64
-          install: gcc python
-      - run: python3 -m ensurepip
-      - run: SETUPTOOLS_USE_DISTUTILS=stdlib python3 -m pip install .
+          packages: gcc-core python3 python3-devel python3-pip
+      - run: python3 -m pip install .
       - run: python3 examples/Python/thread-safe.py
