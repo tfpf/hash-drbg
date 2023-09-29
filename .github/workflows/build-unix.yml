@@ -1,5 +1,8 @@
 name: build-unix
 on: [push, workflow_dispatch]
+env:
+  LD_LIBRARY_PATH: /usr/local/lib
+  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
 
 jobs:
   c:
