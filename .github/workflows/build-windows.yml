@@ -1,11 +1,13 @@
 name: build-windows
 on: [push, workflow_dispatch]
+defaults:
+  run:
+    shell: bash
 
 jobs:
   python:
     runs-on: windows-2022
     steps:
-      - run: git config --global core.autocrlf input
       - uses: actions/checkout@v4
       - uses: cygwin/cygwin-install-action@v4
         with:
