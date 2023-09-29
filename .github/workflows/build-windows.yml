@@ -15,10 +15,8 @@ jobs:
           install: cmake gcc make pkgconf
       - run: ./run.sh
       - name: Set `LD_LIBRARY_PATH` and `PKG_CONFIG_PATH`
-        run: |
-          printf "export LD_LIBRARY_PATH=/usr/local/lib\n" > ~/.bash_profile
-          printf "export PKG_CONFIG_PATH=/usr/local/share/pkgconfig\n" >> ~/.bash_profile
-      - run: env
+        run: printf "export LD_LIBRARY_PATH=/usr/local/lib\nexport PKG_CONFIG_PATH=/usr/local/share/pkgconfig\n" > ~/.bash_profile
+      - run: env | sort
       - run: cd tests && make && ./tests
   python:
     runs-on: windows-2022
