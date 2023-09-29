@@ -18,4 +18,5 @@ jobs:
       - run: find "/usr/local/share/pkgconfig"
       - run: echo "export PKG_CONFIG_PATH=/usr/local/share/pkgconfig" > ~/.bash_profile
       - run: echo "export LD_LIBRARY_PATH=/usr/local/lib" >> ~/.bash_profile
+      - run: ldconfig
       - run: cd tests && make && ./tests
