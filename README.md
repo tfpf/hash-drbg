@@ -30,7 +30,8 @@ On Windows, these are available natively via [MSYS2](https://www.msys2.org) (not
 [Homebrew](https://brew.sh); however, their Apple-specific variants provided by
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine.
 
-![build](https://github.com/tfpf/hash-drbg/actions/workflows/build.yml/badge.svg)
+![build-unix](https://github.com/tfpf/hash-drbg/actions/workflows/build-unix.yml/badge.svg)
+![build-windows](https://github.com/tfpf/hash-drbg/actions/workflows/build-windows.yml/badge.svg)
 
 ## Install for C (and C++)
 ```shell
