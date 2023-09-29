@@ -15,5 +15,5 @@ jobs:
           install: cmake gcc make
           #pacboy: cmake:p gcc:p make:p
       - run: ./run.sh
-      #- run: find "/c/Program Files (x86)/hdrbg/share/pkgconfig"
-      - run: PKG_CONFIG_PATH="/c/Program Files (x86)/hdrbg/share/pkgconfig" cd tests && make && ./tests
+      - run: find "/usr/local/share/pkgconfig"
+      - run: PKG_CONFIG_PATH="/usr/local/share/pkgconfig" cd tests && make && ./tests
