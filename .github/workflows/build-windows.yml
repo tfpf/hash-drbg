@@ -18,6 +18,7 @@ jobs:
         run: |
           printf "export LD_LIBRARY_PATH=/usr/local/lib\n" > ~/.bash_profile
           printf "export PKG_CONFIG_PATH=/usr/local/share/pkgconfig\n" >> ~/.bash_profile
+      - run: env
       - run: cd tests && make && ./tests
   python:
     runs-on: windows-2022
