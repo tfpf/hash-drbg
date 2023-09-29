@@ -13,6 +13,6 @@ jobs:
         with:
           msystem: UCRT64
           pacboy: python:p
-      - run: python3 -m pip install .
       - run: python3 -m ensurepip
+      - run: python3 -m pip install .
       - run: python3 examples/Python/thread-safe.py
