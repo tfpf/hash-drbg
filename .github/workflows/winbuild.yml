@@ -12,11 +12,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
-          install: cmake gcc make
-          #pacboy: cmake:p gcc:p make:p
+          pacboy: cmake:p gcc:p make:p
       - run: ./run.sh
-      - run: find "/usr/local/share/pkgconfig"
-      - run: echo "export PKG_CONFIG_PATH=/usr/local/share/pkgconfig" > ~/.bash_profile
-      - run: echo "export LD_LIBRARY_PATH=/usr/local/lib" >> ~/.bash_profile
-      - run: ldconfig
-      - run: cd tests && make && ./tests
+      - run: echo 'export PKG_CONFIG_PATH="/c/Program Files (x86)/hdrbg/share/pkgconfig"' > ~/.bash_profile
+      - run: cd tests && mingw32-make && ./tests
