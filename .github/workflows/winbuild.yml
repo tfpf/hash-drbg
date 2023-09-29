@@ -3,8 +3,8 @@ on: [push, workflow_dispatch]
 defaults:
   run:
     shell: msys2 {0}
-# env:
-#   PKG_CONFIG_PATH: /usr/local/share/pkgconfig
+env:
+  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
 
 jobs:
   c:
