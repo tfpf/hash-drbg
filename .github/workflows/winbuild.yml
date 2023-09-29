@@ -16,4 +16,5 @@ jobs:
           #pacboy: cmake:p gcc:p make:p
       - run: ./run.sh
       - run: find "/usr/local/share/pkgconfig"
-      - run: PKG_CONFIG_PATH="/usr/local/share/pkgconfig" cd tests && make && ./tests
+      - run: "export PKG_CONFIG_PATH=/usr/local/share/pkgconfig" > ~/.bash_profile
+      - run: cd tests && make && ./tests
