@@ -6,6 +6,7 @@ defaults:
 
 jobs:
   python:
+    name: Python / windows-2022
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v4
