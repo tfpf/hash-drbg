@@ -16,4 +16,4 @@ jobs:
           msystem: UCRT64
           pacboy: cmake:p gcc:p make:p
       - run: ./run.sh
-      - run: cd tests && make && ./tests
+      - run: cd tests && mingw32-make && ./tests
