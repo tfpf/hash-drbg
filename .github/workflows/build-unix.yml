@@ -6,7 +6,7 @@ env:
 
 jobs:
   c:
-    name: C / ${{ runner.os }}
+    name: C / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -16,7 +16,7 @@ jobs:
       - run: ./run.sh
       - run: cd tests && make && ./tests
   python:
-    name: Python / ${{ runner.os }}
+    name: Python / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
