@@ -12,7 +12,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
-          pacboy: python:p
-      - run: python -m ensurepip
-      - run: SETUPTOOLS_USE_DISTUTILS=stdlib python -m pip install .
-      - run: python examples/Python/thread-safe.py
+          pacboy: gcc:p python:p
+      - run: python3 -m ensurepip
+      - run: SETUPTOOLS_USE_DISTUTILS=stdlib python3 -m pip install .
+      - run: python3 examples/Python/thread-safe.py
