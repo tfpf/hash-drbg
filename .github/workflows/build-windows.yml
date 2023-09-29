@@ -1,0 +1,17 @@
+name: build-windows
+on: [push, workflow_dispatch]
+defaults:
+  run:
+    shell: msys2 {0}
+
+jobs:
+  python:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          pacboy: python:p
+      - run: python3 -m pip install .
+      - run: python3 examples/Python/thread-safe.py
