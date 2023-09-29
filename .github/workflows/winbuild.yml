@@ -3,8 +3,6 @@ on: [push, workflow_dispatch]
 defaults:
   run:
     shell: msys2 {0}
-env:
-  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
 
 jobs:
   c:
@@ -16,4 +14,4 @@ jobs:
           msystem: UCRT64
           pacboy: cmake:p gcc:p make:p
       - run: ./run.sh
-      - run: cd tests && mingw32-make && ./tests
+      - run: PKG_CONFIG_PATH=/usr/local/share/pkgconfig cd tests && mingw32-make && ./tests
