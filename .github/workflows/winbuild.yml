@@ -14,4 +14,4 @@ jobs:
           msystem: UCRT64
           pacboy: cmake:p gcc:p make:p
       - run: ./run.sh
-      - run: PKG_CONFIG_PATH="C:/Program Files (x86)/hdrbg/share/pkgconfig" cd tests && mingw32-make && ./tests
+      - run: PKG_CONFIG_PATH="/c/Program Files (x86)/hdrbg/share/pkgconfig" cd tests && mingw32-make && ./tests
