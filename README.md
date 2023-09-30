@@ -36,8 +36,8 @@ optimisation flags, so the program does not compile. Its concurrency library doe
 types, and isn't standard-compliant. Further, Windows does not provide a random device. That is why I suggest MSYS2 and
 Cygwin. If installation fails for you, check the [workflows](.github/workflows) to see how I got it working.
 
-![unix](https://github.com/tfpf/hash-drbg/actions/workflows/unix.yml/badge.svg)
 ![cygwin](https://github.com/tfpf/hash-drbg/actions/workflows/cygwin.yml/badge.svg)
+![unix](https://github.com/tfpf/hash-drbg/actions/workflows/unix.yml/badge.svg)
 
 ## Install for C (and C++)
 ```shell
