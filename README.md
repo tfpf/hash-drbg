@@ -30,8 +30,14 @@ On Windows, these are available natively via [MSYS2](https://www.msys2.org) (not
 [Homebrew](https://brew.sh); however, their Apple-specific variants provided by
 [Xcode](https://apps.apple.com/app/xcode/id497799835) should also be fine.
 
-![build-unix](https://github.com/tfpf/hash-drbg/actions/workflows/build-unix.yml/badge.svg)
-![build-windows](https://github.com/tfpf/hash-drbg/actions/workflows/build-windows.yml/badge.svg)
+## Troubleshooting Information
+Installing directly on Windows is a massive headache. MSVC adds some unnecessary flags which are incompatible with
+optimisation flags, so the program does not compile. Its concurrency library doesn't properly implement atomic data
+types, and isn't standard-compliant. Further, Windows does not provide a random device. That is why I suggest MSYS2 and
+Cygwin. If installation fails for you, check the [workflows](.github/workflows) to see how I got it working.
+
+![unix](https://github.com/tfpf/hash-drbg/actions/workflows/unix.yml/badge.svg)
+![cygwin](https://github.com/tfpf/hash-drbg/actions/workflows/cygwin.yml/badge.svg)
 
 ## Install for C (and C++)
 ```shell
