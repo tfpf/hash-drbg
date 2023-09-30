@@ -1,9 +1,14 @@
 #include <inttypes.h>
+#include <limits.h>
 #include <stddef.h>
 #include <string.h>
 
 #include "extras.h"
 #include "sha.h"
+
+#ifdef TFPF_HASH_DRBG_OPENSSL_FOUND
+#include <openssl/sha.h>
+#endif
 
 #define ROTR32(x, n) ((x) >> (n) | (x) << (32 - (n)))
 
@@ -46,6 +51,10 @@ sha256_bytes[32];
 uint8_t *
 sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 {
+#if defined TFPF_HASH_DRBG_OPENSSL_FOUND && CHAR_BIT == 8
+    return SHA256(m_bytes_, m_length_, h_bytes);
+#endif
+
     // Initialise the hash.
     uint32_t h_words[8];
     memcpy(h_words, sha256_init, sizeof sha256_init);

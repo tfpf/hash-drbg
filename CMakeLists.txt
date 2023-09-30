@@ -13,6 +13,11 @@ add_library(hdrbg SHARED ${sources})
 target_include_directories(hdrbg PRIVATE include)
 configure_file(hdrbg.pc.in hdrbg.pc @ONLY)
 
+find_package(OpenSSL 3.0.0)
+if(OpenSSL_FOUND)
+    target_compile_definitions(hdrbg PRIVATE TFPF_HASH_DRBG_OPENSSL_FOUND=1)
+endif()
+
 set_target_properties(hdrbg PROPERTIES
     PUBLIC_HEADER include/hdrbg.h
     SOVERSION 1
