@@ -2,7 +2,7 @@ name: build-windows
 on: [push, workflow_dispatch]
 defaults:
   run:
-    shell: bash -l
+    shell: bash -l {0}
 env:
   CHERE_INVOKING: 1
   CYGWIN_NOWINPATH: 1
