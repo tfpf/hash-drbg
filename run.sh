@@ -38,7 +38,6 @@ then
     exit
 fi
 
-# Install.
 if [ "$0" = sh ]
 then
     target=/tmp/hash-drbg-$(date +%s)
