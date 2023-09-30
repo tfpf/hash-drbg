@@ -2,8 +2,10 @@ name: build-windows
 on: [push, workflow_dispatch]
 defaults:
   run:
-    shell: bash
+    shell: bash -l
 env:
+  CHERE_INVOKING: 1
+  CYGWIN_NOWINPATH: 1
   SHELLOPTS: igncr
 
 jobs:

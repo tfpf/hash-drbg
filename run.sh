@@ -28,7 +28,6 @@ install()
     mkdir -p build
     cd build
     cmake ..
-    find $(realpath ..)
     cmake --build . --parallel --verbose
     sudo cmake --install . --config Release
 }
