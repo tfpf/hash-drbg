@@ -28,6 +28,7 @@ install()
     mkdir -p build
     cd build
     cmake ..
+    pwd && find ../lib
     cmake --build . --parallel
     sudo cmake --install . --config Release
 }
