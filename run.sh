@@ -29,7 +29,7 @@ install()
     cd build
     cmake ..
     cmake --build . --parallel
-    sudo cmake --install .
+    sudo cmake --install . --config Release
 }
 
 if [ "$1" = rm ]
