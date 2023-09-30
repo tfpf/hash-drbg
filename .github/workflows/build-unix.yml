@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: ./run.sh
       - run: cd tests && make && ./tests
+      - run: cd benchmarks && make && ./benchmarks
   python:
     name: ${{ matrix.os }} / Python
     runs-on: ${{ matrix.os }}
@@ -25,3 +26,4 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 -m pip install .
       - run: python3 examples/Python/thread-safe.py
+      - run: python3 benchmarks/benchmarks.py
