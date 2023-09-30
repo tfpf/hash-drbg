@@ -7,6 +7,8 @@ env:
   CHERE_INVOKING: 1
   CYGWIN_NOWINPATH: 1
   SHELLOPTS: igncr
+  LD_LIBRARY_PATH: /usr/local/lib
+  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
 
 jobs:
   c:
