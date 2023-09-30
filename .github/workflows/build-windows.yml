@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cygwin/cygwin-install-action@v4
         with:
-          packages: cmake gcc-core make pkg-config
+          packages: cmake gcc-core gcc-g++ make pkg-config
       - run: ./run.sh
       - run: cd tests && make && ./tests
       - run: cd benchmarks && make && ./benchmarks
