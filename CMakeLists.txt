@@ -21,9 +21,11 @@ set_target_properties(hdrbg PROPERTIES
 target_compile_options(hdrbg PRIVATE -O2 -Wall -Wextra -fstrict-aliasing)
 
 install(TARGETS hdrbg
+    CONFIGURATIONS Release
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 install(FILES ${CMAKE_BINARY_DIR}/hdrbg.pc
+    CONFIGURATIONS Release
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/pkgconfig
 )
