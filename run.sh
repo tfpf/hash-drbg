@@ -1,8 +1,15 @@
 #! /usr/bin/env sh
 
+set -e
+
 os=$(uname 2>/dev/null)
 case $os in
-    (Darwin | Linux) SUDO=sudo;;
+    (Darwin | Linux);;
+    (CYGWIN* | MINGW* | MSYS*) alias sudo='';;
+    (*)
+        printf "Unknown OS. Edit 'run.sh' as necessary and retry.\n" >&2
+        exit 1
+    ;;
 esac
 
 # Uninstall.
@@ -14,7 +21,7 @@ then
         printf "Cannot find install manifest!\n" >&2
         exit 1
     fi
-    $SUDO rm -v $(cat build/install_manifest.txt)
+    sudo rm -v $(cat build/install_manifest.txt)
     exit
 fi
 
@@ -28,4 +35,4 @@ fi
 mkdir -p build && cd build
 cmake ..
 cmake --build . --parallel
-$SUDO cmake --install .
+sudo cmake --install .
