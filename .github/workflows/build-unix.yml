@@ -24,6 +24,6 @@ jobs:
         os: [macos-12, ubuntu-22.04]
     steps:
       - uses: actions/checkout@v4
-      - run: python3 -m pip install .
+      - run: python3 -m pip install -v .
       - run: python3 examples/Python/thread-safe.py
       - run: python3 benchmarks/benchmarks.py
