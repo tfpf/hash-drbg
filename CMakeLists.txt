@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 cmake_policy(SET CMP0048 NEW)
 project(hdrbg LANGUAGES C VERSION 1.0.0 DESCRIPTION "C implementation of Hash DRBG")
 include(GNUInstallDirs)
+message(${CMAKE_SYSTEM_NAME})
 
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD 17)
@@ -18,6 +19,10 @@ if(OPENSSL_FOUND)
     target_compile_definitions(hdrbg PRIVATE TFPF_HASH_DRBG_OPENSSL_FOUND=1)
     target_include_directories(hdrbg PRIVATE ${OPENSSL_INCLUDE_DIR})
     target_link_libraries(hdrbg PRIVATE ${OPENSSL_CRYPTO_LIBRARIES})
+endif()
+
+if(MINGW OR MSYS)
+    target_link_libraries(hdrbg PRIVATE -lbcrypt)
 endif()
 
 set_target_properties(hdrbg PROPERTIES
