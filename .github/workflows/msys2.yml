@@ -1,0 +1,32 @@
+name: msys2
+on: [push, workflow_dispatch]
+defaults:
+  run:
+    shell: msys2 -l {0}
+env:
+  LD_LIBRARY_PATH: /usr/local/lib
+  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
+
+jobs:
+  c:
+    name: windows-2022 / C
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          pacboy: cmake:p gcc:p make:p pkg-config:p
+      - run: ./run.sh
+      - run: cd tests && mingw32-make && ./tests
+  python:
+    name: windows-2022 / Python
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          pacboy: gcc:p python:p
+      - run: python3 -m pip install .
+      - run: python3 examples/Python/thread-safe.py
