@@ -31,6 +31,7 @@ hdrbg_err = HDRBG_ERR_NONE;
 #if defined _WIN32
 #include <windows.h>
 #include <bcrypt.h>
+#include <ntdef.h>
 #elif defined __linux__ || defined __CYGWIN__
 #include <sys/random.h>
 #endif
@@ -208,7 +209,7 @@ streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
     // an entropy source.
 #if defined _WIN32 && CHAR_BIT == 8
     NTSTATUS status = BCryptGenRandom(NULL, m_bytes, m_length, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-    if(status != STATUS_SUCCESS)
+    if(NT_SUCCESS(status))
     {
         hdrbg_err = HDRBG_ERR_NO_ENTROPY;
         return 0;
