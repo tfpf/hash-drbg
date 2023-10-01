@@ -31,7 +31,7 @@ hdrbg_err = HDRBG_ERR_NONE;
 #if defined _WIN32
 #include <windows.h>
 #include <bcrypt.h>
-#elif defined __linux__
+#elif defined __linux__ || defined __CYGWIN__
 #include <sys/random.h>
 #endif
 
@@ -214,7 +214,7 @@ streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
         return 0;
     }
     return m_length;
-#elif defined __linux__ && CHAR_BIT == 8
+#elif (defined __linux__ || defined __CYGWIN__) && CHAR_BIT == 8
     ssize_t len = getrandom(m_bytes, m_length, 0);
     if(len < 0)
     {
