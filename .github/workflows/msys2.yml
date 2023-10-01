@@ -4,8 +4,8 @@ defaults:
   run:
     shell: msys2 -l {0}
 env:
-  LD_LIBRARY_PATH: /usr/local/lib
-  PKG_CONFIG_PATH: /usr/local/share/pkgconfig
+  LD_LIBRARY_PATH: "C:/Program Files (x86)/hdrbg/bin"
+  PKG_CONFIG_PATH: "C:/Program Files (x86)/hdrbg/share/pkgconfig"
 
 jobs:
   c:
