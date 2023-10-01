@@ -14,8 +14,10 @@ target_include_directories(hdrbg PRIVATE include)
 configure_file(hdrbg.pc.in hdrbg.pc @ONLY)
 
 find_package(OpenSSL 3.0.0)
-if(OpenSSL_FOUND)
+if(OPENSSL_FOUND)
     target_compile_definitions(hdrbg PRIVATE TFPF_HASH_DRBG_OPENSSL_FOUND=1)
+    target_include_directories(hdrbg PRIVATE ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries(hdrbg PRIVATE ${OPENSSL_CRYPTO_LIBRARIES})
 endif()
 
 set_target_properties(hdrbg PROPERTIES
