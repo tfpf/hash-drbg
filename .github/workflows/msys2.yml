@@ -16,7 +16,8 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
-          pacboy: cmake:p gcc:p make:p pkg-config:p
+          pacboy: cmake:p gcc:p make:p pkgconf:p
+      - run: env | sort
       - run: ./run.sh
       - run: cd tests && mingw32-make && ./tests
   python:
