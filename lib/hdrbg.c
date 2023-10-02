@@ -28,6 +28,14 @@ static enum hdrbg_err_t
 #endif
 hdrbg_err = HDRBG_ERR_NONE;
 
+#if defined _WIN32
+#include <windows.h>
+#include <bcrypt.h>
+#include <ntdef.h>
+#elif defined __linux__ || defined __CYGWIN__
+#include <sys/random.h>
+#endif
+
 #define HDRBG_SEED_LENGTH 55
 #define HDRBG_SECURITY_STRENGTH 32
 #define HDRBG_NONCE1_LENGTH 8
@@ -186,7 +194,41 @@ hdrbg_seed(struct hdrbg_t *hd, uint8_t *s_bytes, size_t s_length)
 static size_t
 streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
 {
-    FILE *fptr = fptr_ == NULL ? fopen("/dev/urandom", "rb") : fptr_;
+    // The file will be specified only while testing.
+    if(fptr_ != NULL)
+    {
+        size_t len = fread(m_bytes, sizeof *m_bytes, m_length, fptr_);
+        if(len < m_length)
+        {
+            hdrbg_err = HDRBG_ERR_INSUFFICIENT_ENTROPY;
+        }
+        return len;
+    }
+
+    // During normal operation, the file won't be specified. Obtain bytes from
+    // an entropy source.
+#if defined _WIN32 && CHAR_BIT == 8
+    NTSTATUS status = BCryptGenRandom(NULL, m_bytes, m_length, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+    if(NT_SUCCESS(status))
+    {
+        hdrbg_err = HDRBG_ERR_NO_ENTROPY;
+        return 0;
+    }
+    return m_length;
+#elif (defined __linux__ || defined __CYGWIN__) && CHAR_BIT == 8
+    ssize_t len = getrandom(m_bytes, m_length, 0);
+    if(len < 0)
+    {
+        hdrbg_err = HDRBG_ERR_NO_ENTROPY;
+        return 0;
+    }
+    if((size_t)len < m_length)
+    {
+        hdrbg_err = HDRBG_ERR_INSUFFICIENT_ENTROPY;
+    }
+    return len;
+#else
+    FILE *fptr = fopen("/dev/urandom", "rb");
     if(fptr == NULL)
     {
         hdrbg_err = HDRBG_ERR_NO_ENTROPY;
@@ -197,11 +239,9 @@ streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
     {
         hdrbg_err = HDRBG_ERR_INSUFFICIENT_ENTROPY;
     }
-    if(fptr_ == NULL)
-    {
-        fclose(fptr);
-    }
+    fclose(fptr);
     return len;
+#endif
 }
 
 /******************************************************************************

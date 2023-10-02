@@ -20,6 +20,10 @@ if(OPENSSL_FOUND)
     target_link_libraries(hdrbg PRIVATE ${OPENSSL_CRYPTO_LIBRARIES})
 endif()
 
+if(MINGW OR MSYS)
+    target_link_libraries(hdrbg PRIVATE -lbcrypt)
+endif()
+
 set_target_properties(hdrbg PROPERTIES
     PUBLIC_HEADER include/hdrbg.h
     SOVERSION 1
