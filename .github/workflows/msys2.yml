@@ -4,8 +4,7 @@ defaults:
   run:
     shell: msys2 -l {0}
 env:
-  LD_LIBRARY_PATH: "C:/Program Files (x86)/hdrbg/bin"
-  PKG_CONFIG_PATH: "C:/Program Files (x86)/hdrbg/share/pkgconfig"
+  LD_LIBRARY_PATH: "/c/Program Files (x86)/hdrbg/bin"
 
 jobs:
   c:
@@ -19,6 +18,7 @@ jobs:
           pacboy: cmake:p gcc:p make:p pkgconf:p
       - run: env | sort
       - run: ./run.sh
+      - run: echo "export PKG_CONFIG_PATH='/c/Program Files (x86)/hdrbg/share/pkgconfig'" > ~/.bash_profile
       - run: cd tests && mingw32-make && ./tests
   python:
     name: windows-2022 / Python
@@ -29,5 +29,6 @@ jobs:
         with:
           msystem: UCRT64
           pacboy: gcc:p python:p
+      - run: python3 -m ensurepip
       - run: python3 -m pip install .
       - run: python3 examples/Python/thread-safe.py
