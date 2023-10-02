@@ -16,6 +16,7 @@ jobs:
         with:
           msystem: UCRT64
           pacboy: cmake:p gcc:p make:p pkgconf:p
+          path-type: strict
       - run: env | sort
       - run: ./run.sh
       - run: echo "export PKG_CONFIG_PATH='/c/Program Files (x86)/hdrbg/share/pkgconfig'" > ~/.bash_profile
