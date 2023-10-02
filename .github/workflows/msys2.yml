@@ -15,7 +15,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
-          pacboy: cmake:p gcc:p make:p pkgconf:p
+          pacboy: cmake:p gcc:p make:p ninja:p pkgconf:p
           path-type: strict
       - run: env | sort
       - run: ./run.sh
