@@ -4,6 +4,7 @@
 #include <hdrbg.h>
 
 #define benchmark(function, iterations)                                                                               \
+    do                                                                                                                \
     {                                                                                                                 \
         auto delay = std::chrono::microseconds::max();                                                                \
         for (int i = 0; i < 32; ++i)                                                                                  \
@@ -19,7 +20,7 @@
         }                                                                                                             \
         auto result = delay.count() / static_cast<double>(iterations);                                                \
         std::printf("%20s %8.2lf µs\n", #function, result);                                                           \
-    }
+    } while (false)
 
 /******************************************************************************
  * Main function.
@@ -27,5 +28,8 @@
 int
 main(void)
 {
-    benchmark(hdrbg_init, 100) benchmark(hdrbg_reinit, 100) benchmark(hdrbg_rand, 800) benchmark(hdrbg_real, 800)
+    benchmark(hdrbg_init, 100);
+    benchmark(hdrbg_reinit, 100);
+    benchmark(hdrbg_rand, 800);
+    benchmark(hdrbg_real, 800);
 }
