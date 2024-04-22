@@ -13,16 +13,15 @@
 #define ROTR32(x, n) ((x) >> (n) | (x) << (32 - (n)))
 
 // Hash initialiser.
-static uint32_t const
-sha256_init[8] =
-{
+static uint32_t const sha256_init[8] = {
+    // clang-format off
     0x6A09E667U, 0xBB67AE85U, 0x3C6EF372U, 0xA54FF53AU, 0x510E527FU, 0x9B05688CU, 0x1F83D9ABU, 0x5BE0CD19U,
+    // clang-format on
 };
 
 // Round constants.
-static uint32_t const
-sha256_rc[64] =
-{
+static uint32_t const sha256_rc[64] = {
+    // clang-format off
     0x428A2F98U, 0x71374491U, 0xB5C0FBCFU, 0xE9B5DBA5U, 0x3956C25BU, 0x59F111F1U, 0x923F82A4U, 0xAB1C5ED5U,
     0xD807AA98U, 0x12835B01U, 0x243185BEU, 0x550C7DC3U, 0x72BE5D74U, 0x80DEB1FEU, 0x9BDC06A7U, 0xC19BF174U,
     0xE49B69C1U, 0xEFBE4786U, 0x0FC19DC6U, 0x240CA1CCU, 0x2DE92C6FU, 0x4A7484AAU, 0x5CB0A9DCU, 0x76F988DAU,
@@ -31,11 +30,11 @@ sha256_rc[64] =
     0xA2BFE8A1U, 0xA81A664BU, 0xC24B8B70U, 0xC76C51A3U, 0xD192E819U, 0xD6990624U, 0xF40E3585U, 0x106AA070U,
     0x19A4C116U, 0x1E376C08U, 0x2748774CU, 0x34B0BCB5U, 0x391C0CB3U, 0x4ED8AA4AU, 0x5B9CCA4FU, 0x682E6FF3U,
     0x748F82EEU, 0x78A5636FU, 0x84C87814U, 0x8CC70208U, 0x90BEFFFAU, 0xA4506CEBU, 0xBEF9A3F7U, 0xC67178F2U,
+    // clang-format on
 };
 
 // Hash output.
-static uint8_t
-sha256_bytes[32];
+static uint8_t sha256_bytes[32];
 
 /******************************************************************************
  * Calculate the hash of the given data.
@@ -65,30 +64,30 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
 
     // Store the padding bytes in a sufficiently large array.
     size_t p_length = ((1 + zeros) >> 3) + 8;
-    uint8_t p_bytes[72] = {0x80U};
+    uint8_t p_bytes[72] = { 0x80U };
     memdecompose(p_bytes + p_length - 8, 8, nbits);
 
     // Process each 512-bit chunk.
     uint8_t const *m_iter = m_bytes_;
     size_t m_length = m_length_ + p_length;
-    for(size_t i = 0; i < m_length; i += 64)
+    for (size_t i = 0; i < m_length; i += 64)
     {
         // Expand to 2048 bits.
-        uint32_t schedule[64] = {0};
-        for(int j = 0; j < 16; ++j)
+        uint32_t schedule[64] = { 0 };
+        for (int j = 0; j < 16; ++j)
         {
             uint8_t const *m_iter_ = m_iter + 4;
-            if(m_iter < m_bytes_ + m_length_ && m_iter_ >= m_bytes_ + m_length_)
+            if (m_iter < m_bytes_ + m_length_ && m_iter_ >= m_bytes_ + m_length_)
             {
                 // Reading four bytes will cross the message-padding boundary.
                 // Switch over from message bytes to padding bytes.
                 int k;
-                for(k = 0; m_iter < m_bytes_ + m_length_; ++k, ++m_iter)
+                for (k = 0; m_iter < m_bytes_ + m_length_; ++k, ++m_iter)
                 {
                     schedule[j] = schedule[j] << 8 | *m_iter;
                 }
                 m_iter = p_bytes;
-                for(; k < 4; ++k, ++m_iter)
+                for (; k < 4; ++k, ++m_iter)
                 {
                     schedule[j] = schedule[j] << 8 | *m_iter;
                 }
@@ -99,7 +98,7 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
                 m_iter = m_iter_;
             }
         }
-        for(int j = 16; j < 64; ++j)
+        for (int j = 16; j < 64; ++j)
         {
             uint32_t sigma0 = ROTR32(schedule[j - 15], 7) ^ ROTR32(schedule[j - 15], 18) ^ schedule[j - 15] >> 3;
             uint32_t sigma1 = ROTR32(schedule[j - 2], 17) ^ ROTR32(schedule[j - 2], 19) ^ schedule[j - 2] >> 10;
@@ -109,7 +108,7 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
         // Compress to 256 bits.
         uint32_t curr[8];
         memcpy(curr, h_words, sizeof curr);
-        for(int j = 0; j < 64; ++j)
+        for (int j = 0; j < 64; ++j)
         {
             uint32_t Sigma0 = ROTR32(curr[0], 2) ^ ROTR32(curr[0], 13) ^ ROTR32(curr[0], 22);
             uint32_t Sigma1 = ROTR32(curr[4], 6) ^ ROTR32(curr[4], 11) ^ ROTR32(curr[4], 25);
@@ -127,7 +126,7 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
         }
 
         // Calculate the intermediate hash.
-        for(int j = 0; j < 8; ++j)
+        for (int j = 0; j < 8; ++j)
         {
             h_words[j] += curr[j];
         }
@@ -136,7 +135,7 @@ sha256(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes)
     // Copy the hash to the output array.
     h_bytes = h_bytes == NULL ? sha256_bytes : h_bytes;
     uint8_t *h_iter = h_bytes;
-    for(int i = 0; i < 8; ++i)
+    for (int i = 0; i < 8; ++i)
     {
         h_iter += memdecompose(h_iter, 4, h_words[i]);
     }
