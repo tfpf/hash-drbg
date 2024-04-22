@@ -16,13 +16,14 @@
  *
  * @return Ignored.
  *****************************************************************************/
-int hdrbg_tests_custom(void *hd_)
+int
+hdrbg_tests_custom(void *hd_)
 {
     struct hdrbg_t *hd = hd_;
-    for(int long i = 0; i < CUSTOM_ITERATIONS; ++i)
+    for (int long i = 0; i < CUSTOM_ITERATIONS; ++i)
     {
         uint64_t r = hdrbg_rand(hd);
-        if(r > 0)
+        if (r > 0)
         {
             assert(hdrbg_uint(hd, r) < r);
             assert(hdrbg_err_get() == HDRBG_ERR_NONE);
@@ -31,14 +32,14 @@ int hdrbg_tests_custom(void *hd_)
         assert(hdrbg_err_get() == HDRBG_ERR_INVALID_REQUEST_UINT);
         assert(hdrbg_err_get() == HDRBG_ERR_NONE);
     }
-    for(int long i = 0; i < CUSTOM_ITERATIONS; ++i)
+    for (int long i = 0; i < CUSTOM_ITERATIONS; ++i)
     {
         uint64_t uleft = hdrbg_rand(hd);
         int64_t left = *(int64_t *)&uleft;
         uint64_t uright = hdrbg_rand(hd);
         int64_t right = *(int64_t *)&uright;
         int64_t middle = hdrbg_span(hd, left, right);
-        if(left < right)
+        if (left < right)
         {
             assert(left <= middle && middle < right);
         }
@@ -61,7 +62,8 @@ int hdrbg_tests_custom(void *hd_)
  * @param hd HDRBG object.
  * @param tv Test vectors file.
  *****************************************************************************/
-void tests(struct hdrbg_t *hd, FILE *tv)
+void
+tests(struct hdrbg_t *hd, FILE *tv)
 {
     hdrbg_tests(hd, tv);
     hdrbg_tests_custom(hd);
@@ -70,7 +72,8 @@ void tests(struct hdrbg_t *hd, FILE *tv)
 /******************************************************************************
  * Main function.
  *****************************************************************************/
-int main(void)
+int
+main(void)
 {
     printf("Testing a dynamically-allocated HDRBG object.\n");
     FILE *tv = fopen("Hash_DRBG.dat", "rb");

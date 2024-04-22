@@ -18,7 +18,8 @@ static atomic_ullong
 #else
 static int long long unsigned
 #endif
-seq_num = 0;
+    seq_num
+    = 0;
 
 #if !(defined __STDC_NO_THREADS__ || defined _WIN32)
 #include <threads.h>
@@ -26,7 +27,8 @@ static thread_local enum hdrbg_err_t
 #else
 static enum hdrbg_err_t
 #endif
-hdrbg_err = HDRBG_ERR_NONE;
+    hdrbg_err
+    = HDRBG_ERR_NONE;
 
 #define HDRBG_SEED_LENGTH 55
 #define HDRBG_SECURITY_STRENGTH 32
@@ -49,8 +51,7 @@ struct hdrbg_t
     uint8_t C[HDRBG_SEED_LENGTH];
     uint64_t gen_count;
 };
-static struct hdrbg_t
-hdrbg;
+static struct hdrbg_t hdrbg;
 
 /******************************************************************************
  * Obtain the error status.
@@ -77,13 +78,13 @@ static void
 add_accumulate(uint8_t *a_bytes, size_t a_length, uint8_t const *b_bytes, size_t b_length)
 {
     int unsigned carry = 0;
-    for(; a_length > 0 && b_length > 0; --a_length, --b_length)
+    for (; a_length > 0 && b_length > 0; --a_length, --b_length)
     {
         carry = a_bytes[a_length - 1] + carry + b_bytes[b_length - 1];
         a_bytes[a_length - 1] = carry;
         carry >>= 8;
     }
-    for(; a_length > 0; --a_length)
+    for (; a_length > 0; --a_length)
     {
         carry += a_bytes[a_length - 1];
         a_bytes[a_length - 1] = carry;
@@ -113,7 +114,7 @@ hash_df(uint8_t const *m_bytes_, size_t m_length_, uint8_t *h_bytes, size_t h_le
 
     // Hash repeatedly.
     size_t iterations = (h_length - 1) / HDRBG_OUTPUT_LENGTH + 1;
-    for(size_t i = 1; i <= iterations; ++i)
+    for (size_t i = 1; i <= iterations; ++i)
     {
         m_bytes[0] = i;
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
@@ -143,7 +144,7 @@ hash_gen(uint8_t const *m_bytes_, uint8_t *h_bytes, size_t h_length)
 
     // Hash repeatedly.
     size_t iterations = (h_length - 1) / HDRBG_OUTPUT_LENGTH + 1;
-    for(size_t i = 0; i < iterations; ++i)
+    for (size_t i = 0; i < iterations; ++i)
     {
         uint8_t tmp[HDRBG_OUTPUT_LENGTH];
         sha256(m_bytes, HDRBG_SEED_LENGTH, tmp);
@@ -187,17 +188,17 @@ static size_t
 streamtobytes(FILE *fptr_, uint8_t *m_bytes, size_t m_length)
 {
     FILE *fptr = fptr_ == NULL ? fopen("/dev/urandom", "rb") : fptr_;
-    if(fptr == NULL)
+    if (fptr == NULL)
     {
         hdrbg_err = HDRBG_ERR_NO_ENTROPY;
         return 0;
     }
     size_t len = fread(m_bytes, sizeof *m_bytes, m_length, fptr);
-    if(len < m_length)
+    if (len < m_length)
     {
         hdrbg_err = HDRBG_ERR_INSUFFICIENT_ENTROPY;
     }
-    if(fptr_ == NULL)
+    if (fptr_ == NULL)
     {
         fclose(fptr);
     }
@@ -211,13 +212,13 @@ struct hdrbg_t *
 hdrbg_init(bool dma)
 {
     struct hdrbg_t *hd = dma ? malloc(sizeof *hd) : &hdrbg;
-    if(hd == NULL)
+    if (hd == NULL)
     {
         hdrbg_err = HDRBG_ERR_OUT_OF_MEMORY;
         return NULL;
     }
     uint8_t seedmaterial[HDRBG_SECURITY_STRENGTH + HDRBG_NONCE1_LENGTH + HDRBG_NONCE2_LENGTH];
-    if(streamtobytes(NULL, seedmaterial, HDRBG_SECURITY_STRENGTH) < HDRBG_SECURITY_STRENGTH)
+    if (streamtobytes(NULL, seedmaterial, HDRBG_SECURITY_STRENGTH) < HDRBG_SECURITY_STRENGTH)
     {
         goto cleanup_hd;
     }
@@ -238,9 +239,9 @@ struct hdrbg_t *
 hdrbg_reinit(struct hdrbg_t *hd)
 {
     hd = hd == NULL ? &hdrbg : hd;
-    uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = {0x01U};
+    uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_SECURITY_STRENGTH] = { 0x01U };
     memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
-    if(streamtobytes(NULL, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH) < HDRBG_SECURITY_STRENGTH)
+    if (streamtobytes(NULL, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_SECURITY_STRENGTH) < HDRBG_SECURITY_STRENGTH)
     {
         return NULL;
     }
@@ -254,20 +255,20 @@ hdrbg_reinit(struct hdrbg_t *hd)
 int
 hdrbg_fill(struct hdrbg_t *hd, bool prediction_resistance, uint8_t *r_bytes, int long unsigned r_length)
 {
-    if(r_length > HDRBG_REQUEST_LIMIT)
+    if (r_length > HDRBG_REQUEST_LIMIT)
     {
         hdrbg_err = HDRBG_ERR_INVALID_REQUEST_FILL;
         return -1;
     }
     hd = hd == NULL ? &hdrbg : hd;
-    if(prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
+    if (prediction_resistance || hd->gen_count == HDRBG_RESEED_INTERVAL)
     {
-        if(hdrbg_reinit(hd) == NULL)
+        if (hdrbg_reinit(hd) == NULL)
         {
             return -1;
         }
     }
-    if(r_length > 0)
+    if (r_length > 0)
     {
         hash_gen(hd->V + 1, r_bytes, r_length);
     }
@@ -296,7 +297,7 @@ static int
 hdrbg_rand_(struct hdrbg_t *hd, uint64_t *r)
 {
     uint8_t value[8];
-    if(hdrbg_fill(hd, false, value, 8) < 0)
+    if (hdrbg_fill(hd, false, value, 8) < 0)
     {
         return -1;
     }
@@ -311,7 +312,7 @@ uint64_t
 hdrbg_rand(struct hdrbg_t *hd)
 {
     uint64_t r;
-    if(hdrbg_rand_(hd, &r) == -1)
+    if (hdrbg_rand_(hd, &r) == -1)
     {
         return -1;
     }
@@ -330,7 +331,7 @@ hdrbg_rand(struct hdrbg_t *hd)
 static int
 hdrbg_uint_(struct hdrbg_t *hd, uint64_t modulus, uint64_t *r)
 {
-    if(modulus == 0)
+    if (modulus == 0)
     {
         hdrbg_err = HDRBG_ERR_INVALID_REQUEST_UINT;
         return -1;
@@ -338,12 +339,11 @@ hdrbg_uint_(struct hdrbg_t *hd, uint64_t modulus, uint64_t *r)
     uint64_t upper = 0xFFFFFFFFFFFFFFFFU - 0xFFFFFFFFFFFFFFFFU % modulus;
     do
     {
-        if(hdrbg_rand_(hd, r) == -1)
+        if (hdrbg_rand_(hd, r) == -1)
         {
             return -1;
         }
-    }
-    while(*r >= upper);
+    } while (*r >= upper);
     *r %= modulus;
     return 0;
 }
@@ -355,7 +355,7 @@ uint64_t
 hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus)
 {
     uint64_t r;
-    if(hdrbg_uint_(hd, modulus, &r) == -1)
+    if (hdrbg_uint_(hd, modulus, &r) == -1)
     {
         return -1;
     }
@@ -368,7 +368,7 @@ hdrbg_uint(struct hdrbg_t *hd, uint64_t modulus)
 int64_t
 hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
 {
-    if(left >= right)
+    if (left >= right)
     {
         hdrbg_err = HDRBG_ERR_INVALID_REQUEST_SPAN;
         return -1;
@@ -377,7 +377,7 @@ hdrbg_span(struct hdrbg_t *hd, int64_t left, int64_t right)
     uint64_t uright = right;
     uint64_t modulus = uright - uleft;
     uint64_t r;
-    if(hdrbg_uint_(hd, modulus, &r) == -1)
+    if (hdrbg_uint_(hd, modulus, &r) == -1)
     {
         return -1;
     }
@@ -398,7 +398,7 @@ double long
 hdrbg_real(struct hdrbg_t *hd)
 {
     uint64_t r;
-    if(hdrbg_rand_(hd, &r) == -1)
+    if (hdrbg_rand_(hd, &r) == -1)
     {
         return -1.0L;
     }
@@ -411,9 +411,9 @@ hdrbg_real(struct hdrbg_t *hd)
 int
 hdrbg_drop(struct hdrbg_t *hd, int long long count)
 {
-    while(count-- > 0)
+    while (count-- > 0)
     {
-        if(hdrbg_fill(hd, false, NULL, 0) < 0)
+        if (hdrbg_fill(hd, false, NULL, 0) < 0)
         {
             return -1;
         }
@@ -427,7 +427,7 @@ hdrbg_drop(struct hdrbg_t *hd, int long long count)
 void
 hdrbg_zero(struct hdrbg_t *hd)
 {
-    if(hd == NULL || hd == &hdrbg)
+    if (hd == NULL || hd == &hdrbg)
     {
         memclear(&hdrbg, sizeof hdrbg);
         return;
@@ -442,9 +442,9 @@ hdrbg_zero(struct hdrbg_t *hd)
 void
 hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
 {
-    while(m_length-- > 0)
+    while (m_length-- > 0)
     {
-        fprintf(stdout, "%02"PRIx8, *m_bytes++);
+        fprintf(stdout, "%02" PRIx8, *m_bytes++);
     }
     fprintf(stdout, "\n");
 }
@@ -469,7 +469,7 @@ hdrbg_dump(uint8_t const *m_bytes, size_t m_length)
 static void
 hdrbg_tests_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
 {
-    for(int i = 0; i < 60; ++i)
+    for (int i = 0; i < 60; ++i)
     {
         // Initialise.
         uint8_t seedmaterial[HDRBG_TV_ENTROPY_LENGTH + HDRBG_TV_NONCE_LENGTH];
@@ -477,7 +477,7 @@ hdrbg_tests_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         hdrbg_seed(hd, seedmaterial, sizeof seedmaterial / sizeof *seedmaterial);
 
         // Reinitialise.
-        uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_TV_ENTROPY_LENGTH] = {0x01U};
+        uint8_t reseedmaterial[1 + HDRBG_SEED_LENGTH + HDRBG_TV_ENTROPY_LENGTH] = { 0x01U };
         memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
         streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_ENTROPY_LENGTH);
         hdrbg_seed(hd, reseedmaterial, sizeof reseedmaterial / sizeof *reseedmaterial);
@@ -487,7 +487,7 @@ hdrbg_tests_pr(struct hdrbg_t *hd, bool prediction_resistance, FILE *tv)
         hdrbg_fill(hd, false, observed, HDRBG_TV_REQUEST_LENGTH);
 
         // Reinitialise.
-        if(prediction_resistance)
+        if (prediction_resistance)
         {
             memcpy(reseedmaterial + 1, hd->V + 1, HDRBG_SEED_LENGTH * sizeof *reseedmaterial);
             streamtobytes(tv, reseedmaterial + 1 + HDRBG_SEED_LENGTH, HDRBG_TV_ENTROPY_LENGTH);
