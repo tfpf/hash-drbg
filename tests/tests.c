@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <threads.h>
 
 #define WORKERS_SIZE 8
 #define CUSTOM_ITERATIONS (1L << 16)
@@ -57,19 +57,6 @@ hdrbg_tests_custom(void *hd_)
 }
 
 /******************************************************************************
- * Test a particular HDRBG object.
- *
- * @param hd HDRBG object.
- * @param tv Test vectors file.
- *****************************************************************************/
-void
-tests(struct hdrbg_t *hd, FILE *tv)
-{
-    hdrbg_tests(hd, tv);
-    hdrbg_tests_custom(hd);
-}
-
-/******************************************************************************
  * Main function.
  *****************************************************************************/
 int
@@ -77,14 +64,29 @@ main(void)
 {
     printf("Testing a dynamically-allocated HDRBG object.\n");
     FILE *tv = fopen("Hash_DRBG.dat", "rb");
-    struct hdrbg_t *hd = hdrbg_init(true);
-    tests(hd, tv);
-    hdrbg_zero(hd);
+    struct hdrbg_t *hds[WORKERS_SIZE];
+    for (int i = 0; i < WORKERS_SIZE; ++i)
+    {
+        hds[i] = hdrbg_init(true);
+        hdrbg_tests(hds[i], tv);
+        rewind(tv);
+    }
+    thrd_t workers[WORKERS_SIZE];
+    for (int i = 0; i < WORKERS_SIZE; ++i)
+    {
+        thrd_create(workers + i, hdrbg_tests_custom, hds[i]);
+    }
+    for (int i = 0; i < WORKERS_SIZE; ++i)
+    {
+        thrd_join(workers[i], NULL);
+        hdrbg_zero(hds[i]);
+    }
     printf("All tests passed.\n");
 
     printf("Testing the internal HDRBG object.\n");
     rewind(tv);
-    tests(NULL, tv);
+    hdrbg_tests(NULL, tv);
+    hdrbg_tests_custom(NULL);
     fclose(tv);
     printf("All tests passed.\n");
 }
