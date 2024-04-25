@@ -1,4 +1,4 @@
-hdrbg.egg-info
-*.dll
-*.o
-*.so
+/hdrbg.egg-info/
+/*.dll
+/*.o
+/*.so

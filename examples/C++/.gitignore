@@ -1,4 +1,4 @@
-thread-safe
-thread-safe.exe
-thread-unsafe
-thread-unsafe.exe
+/thread-safe
+/thread-safe.exe
+/thread-unsafe
+/thread-unsafe.exe
