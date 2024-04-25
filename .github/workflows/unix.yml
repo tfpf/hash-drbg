@@ -5,16 +5,20 @@ env:
   PKG_CONFIG_PATH: /usr/local/share/pkgconfig
 
 jobs:
-  c:
-    name: ${{ matrix.os }} / C
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-12, ubuntu-22.04]
+  c_macos:
+    name: macos-12 / C
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v4
       - run: ./run.sh
-      - run: cd tests && CC=gcc-11 make && ./tests
+      - run: cd tests && CC=gcc-13 make && ./tests
+  c_linux:
+    name: ubuntu-22.04 / C
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./run.sh
+      - run: cd tests && make && ./tests
   python:
     name: ${{ matrix.os }} / Python
     runs-on: ${{ matrix.os }}
