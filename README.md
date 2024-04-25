@@ -62,10 +62,11 @@ Put the following code in a file `example.c`:
 #include <hdrbg.h>
 #include <stdio.h>
 
-int main(void)
+int
+main(void)
 {
     hdrbg_init(0);
-    for(int i = 0; i < 10; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         long long unsigned r = hdrbg_rand(NULL);
         printf("%llu\n", r);
