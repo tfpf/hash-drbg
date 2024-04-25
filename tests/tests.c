@@ -5,7 +5,12 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#ifndef __STDC_NO_THREADS__
+// The C compilers available on the macOS runners on GitHub Actions do not
+// indicate their lack of support for standard threads with the expected
+// preprocessor macro, so disable multithreading on macOS.
+#if defined __APPLE__ || defined __STDC_NO_THREADS__
+#define STDC_NO_THREADS
+#else
 #include <threads.h>
 #endif
 
@@ -74,12 +79,12 @@ main(void)
         hdrbg_tests(hds[i], tv);
         rewind(tv);
     }
-#ifndef __STDC_NO_THREADS__
+#ifndef STDC_NO_THREADS
     thrd_t workers[WORKERS_SIZE];
 #endif
     for (int i = 0; i < WORKERS_SIZE; ++i)
     {
-#ifndef __STDC_NO_THREADS__
+#ifndef STDC_NO_THREADS
         thrd_create(workers + i, hdrbg_tests_custom, hds[i]);
 #else
         hdrbg_tests_custom(hds[i]);
@@ -87,7 +92,7 @@ main(void)
     }
     for (int i = 0; i < WORKERS_SIZE; ++i)
     {
-#ifndef __STDC_NO_THREADS__
+#ifndef STDC_NO_THREADS
         thrd_join(workers[i], NULL);
 #endif
         hdrbg_zero(hds[i]);
