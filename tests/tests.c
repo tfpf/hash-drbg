@@ -4,7 +4,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
+
+#ifndef __STDC_NO_THREADS__
 #include <threads.h>
+#endif
 
 #define WORKERS_SIZE 8
 #define CUSTOM_ITERATIONS (1L << 16)
@@ -71,14 +74,22 @@ main(void)
         hdrbg_tests(hds[i], tv);
         rewind(tv);
     }
+#ifndef __STDC_NO_THREADS__
     thrd_t workers[WORKERS_SIZE];
+#endif
     for (int i = 0; i < WORKERS_SIZE; ++i)
     {
+#ifndef __STDC_NO_THREADS__
         thrd_create(workers + i, hdrbg_tests_custom, hds[i]);
+#else
+        hdrbg_tests_custom(hds[i]);
+#endif
     }
     for (int i = 0; i < WORKERS_SIZE; ++i)
     {
+#ifndef __STDC_NO_THREADS__
         thrd_join(workers[i], NULL);
+#endif
         hdrbg_zero(hds[i]);
     }
     printf("All tests passed.\n");
