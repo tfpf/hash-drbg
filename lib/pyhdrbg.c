@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <limits.h>
+#include <float.h>
 #include <stdbool.h>
 
 #include "hdrbg.h"
@@ -246,25 +247,28 @@ PyInit_hdrbg(void)
         return NULL;
     }
 
-    PyObject *ulong_max = PyLong_FromUnsignedLong(ULONG_MAX);
-    PyObject *ullong_max = PyLong_FromUnsignedLongLong(ULLONG_MAX);
-    PyObject *long_min = PyLong_FromLong(LONG_MIN);
-    PyObject *long_max = PyLong_FromLong(LONG_MAX);
-    PyObject *llong_min = PyLong_FromLongLong(LLONG_MIN);
-    PyObject *llong_max = PyLong_FromLongLong(LLONG_MAX);
     PyObject *pyhdrbg_module = PyModule_Create(&pyhdrbg);
-    PyObject *pyhdrbg_dict = PyModule_GetDict(pyhdrbg_module);
-    PyDict_SetItemString(pyhdrbg_dict, "ULONG_MAX", ulong_max);
-    PyDict_SetItemString(pyhdrbg_dict, "ULLONG_MAX", ullong_max);
-    PyDict_SetItemString(pyhdrbg_dict, "LONG_MIN", long_min);
-    PyDict_SetItemString(pyhdrbg_dict, "LONG_MAX", long_max);
-    PyDict_SetItemString(pyhdrbg_dict, "LLONG_MIN", llong_min);
-    PyDict_SetItemString(pyhdrbg_dict, "LLONG_MAX", llong_max);
-    Py_DECREF(ulong_max);
-    Py_DECREF(ullong_max);
-    Py_DECREF(long_min);
-    Py_DECREF(long_max);
-    Py_DECREF(llong_min);
-    Py_DECREF(llong_max);
+    PyModule_AddObject(pyhdrbg_module, "CHAR_MAX", PyLong_FromLong(CHAR_MAX));
+    PyModule_AddObject(pyhdrbg_module, "CHAR_MIN", PyLong_FromLong(CHAR_MIN));
+    PyModule_AddObject(pyhdrbg_module, "DBL_MAX", PyFloat_FromDouble(DBL_MAX));
+    PyModule_AddObject(pyhdrbg_module, "DBL_MIN", PyFloat_FromDouble(DBL_MIN));
+    PyModule_AddObject(pyhdrbg_module, "FLT_MAX", PyFloat_FromDouble(FLT_MAX));
+    PyModule_AddObject(pyhdrbg_module, "FLT_MIN", PyFloat_FromDouble(FLT_MIN));
+    PyModule_AddObject(pyhdrbg_module, "INT_MAX", PyLong_FromLong(INT_MAX));
+    PyModule_AddObject(pyhdrbg_module, "INT_MIN", PyLong_FromLong(INT_MIN));
+    PyModule_AddObject(pyhdrbg_module, "LLONG_MAX", PyLong_FromLongLong(LLONG_MAX));
+    PyModule_AddObject(pyhdrbg_module, "LLONG_MIN", PyLong_FromLongLong(LLONG_MIN));
+    PyModule_AddObject(pyhdrbg_module, "LONG_MAX", PyLong_FromLong(LONG_MAX));
+    PyModule_AddObject(pyhdrbg_module, "LONG_MIN", PyLong_FromLong(LONG_MIN));
+    PyModule_AddObject(pyhdrbg_module, "PY_SSIZE_T_MAX", PyLong_FromSsize_t(PY_SSIZE_T_MAX));
+    PyModule_AddObject(pyhdrbg_module, "PY_SSIZE_T_MIN", PyLong_FromSsize_t(PY_SSIZE_T_MIN));
+    PyModule_AddObject(pyhdrbg_module, "SCHAR_MAX", PyLong_FromLong(SCHAR_MAX));
+    PyModule_AddObject(pyhdrbg_module, "SCHAR_MIN", PyLong_FromLong(SCHAR_MIN));
+    PyModule_AddObject(pyhdrbg_module, "SHRT_MAX", PyLong_FromLong(SHRT_MAX));
+    PyModule_AddObject(pyhdrbg_module, "SHRT_MIN", PyLong_FromLong(SHRT_MIN));
+    PyModule_AddObject(pyhdrbg_module, "SIZE_MAX", PyLong_FromSize_t(SIZE_MAX));
+    PyModule_AddObject(pyhdrbg_module, "UCHAR_MAX", PyLong_FromLong(UCHAR_MAX));
+    PyModule_AddObject(pyhdrbg_module, "ULLONG_MAX", PyLong_FromUnsignedLongLong(ULLONG_MAX));
+    PyModule_AddObject(pyhdrbg_module, "ULONG_MAX", PyLong_FromUnsignedLong(ULONG_MAX));
     return pyhdrbg_module;
 }
