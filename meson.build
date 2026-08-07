@@ -9,10 +9,19 @@ source_files = files(
     source_directory / 'hdrbg.c',
     source_directory / 'sha256.c',
 )
-shared_library(
+hdrbg = shared_library(
     'hdrbg',
     source_files,
     install: true,
+)
+install_headers(
+  source_directory / 'hdrbg.h',
+  subdir: 'hdrbg',
+)
+
+pkg = import('pkgconfig')
+pkg.generate(
+  hdrbg,
 )
 
 source_files += source_directory / 'pyhdrbg.c'
