@@ -1,22 +1,32 @@
 [build-system]
-requires = ['setuptools>=61.0']
-build-backend = 'setuptools.build_meta'
+requires = ["meson-python"]
+build-backend = "mesonpy"
 
 [project]
-name = 'hdrbg'
-version = '1.0.0'
+name = "hdrbg"
+version = "1.0.0"
 authors = [
-    { name='Vishal Pankaj Chandratreya' },
+    {name = "Vishal Pankaj Chandratreya"},
 ]
-description = 'Python API for a C implementation of Hash DRBG, a cryptographically secure pseudorandom number generator'
+description = "Python API for a C implementation of Hash DRBG, a cryptographically secure pseudorandom number generator"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {'file' = 'COPYING.md'}
+license = {"file" = "COPYING.md"}
 classifiers = [
-    'Programming Language :: Python :: 3',
-    'Operating System :: OS Independent',
+    "Programming Language :: Python :: 3",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
 ]
 
 [project.urls]
-'Homepage' = 'https://github.com/tfpf/hash-drbg'
-'Bug Tracker' = 'https://github.com/tfpf/hash-drbg/issues'
+Homepage = "https://github.com/tfpf/hash-drbg"
+
+[tool.meson-python.args]
+compile = ["-v"]
+setup = [
+    "-Db_lto=true",
+    "-Dwarning_level=1",
+    "-Dwerror=true",
+]
